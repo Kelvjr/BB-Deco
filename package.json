@@ -1,0 +1,23 @@
+{
+  "name": "system",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+  "dev:web": "npm run dev --prefix web",
+  "dev:dashboard": "npm run dev --prefix dashboard",
+  "dev:backend": "npm run dev --prefix backend"
+},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Kelvjr/BB-Deco.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/Kelvjr/BB-Deco/issues"
+  },
+  "homepage": "https://github.com/Kelvjr/BB-Deco#readme"
+}
