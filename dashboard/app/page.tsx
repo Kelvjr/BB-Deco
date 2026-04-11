@@ -1,4 +1,17 @@
-export default function DashboardHomePage() {
+import {
+  applicationTableRows,
+  fetchApplications,
+} from "@/lib/api";
+
+export const dynamic = "force-dynamic";
+
+export default async function DashboardHomePage() {
+  const result = await fetchApplications();
+  const applications = result.ok ? result.data : [];
+  const rows = applicationTableRows(applications);
+  const total = applications.length;
+  const loadError = result.ok ? null : result.error;
+
   return (
     <div className="min-h-screen bg-muted/30">
       <div className="flex min-h-screen">
@@ -68,19 +81,31 @@ export default function DashboardHomePage() {
           {/* Page content */}
           <main className="flex-1 p-4 md:p-6">
             <div className="mx-auto max-w-6xl space-y-6">
+              {loadError ? (
+                <div
+                  className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-100"
+                  role="alert"
+                >
+                  <p className="font-medium">Could not load applications</p>
+                  <p className="mt-1 text-amber-900/90 dark:text-amber-100/90">
+                    {loadError}
+                  </p>
+                </div>
+              ) : null}
+
               <section className="grid gap-4 md:grid-cols-3">
                 <div className="rounded-2xl border bg-background p-5 shadow-sm">
                   <p className="text-sm text-muted-foreground">
                     Total Applications
                   </p>
-                  <h2 className="mt-3 text-3xl font-semibold">0</h2>
+                  <h2 className="mt-3 text-3xl font-semibold">{total}</h2>
                 </div>
 
                 <div className="rounded-2xl border bg-background p-5 shadow-sm">
                   <p className="text-sm text-muted-foreground">
                     Pending Review
                   </p>
-                  <h2 className="mt-3 text-3xl font-semibold">0</h2>
+                  <h2 className="mt-3 text-3xl font-semibold">{total}</h2>
                 </div>
 
                 <div className="rounded-2xl border bg-background p-5 shadow-sm">
@@ -93,7 +118,7 @@ export default function DashboardHomePage() {
                 <div>
                   <h2 className="text-xl font-semibold">Recent Applications</h2>
                   <p className="text-sm text-muted-foreground">
-                    Latest student submissions will appear here.
+                    Submissions from the public apply form (live from API).
                   </p>
                 </div>
 
@@ -102,20 +127,54 @@ export default function DashboardHomePage() {
                     <thead className="bg-muted/50 text-sm">
                       <tr>
                         <th className="px-4 py-3 font-medium">Applicant</th>
+                        <th className="px-4 py-3 font-medium">Email</th>
                         <th className="px-4 py-3 font-medium">Program</th>
                         <th className="px-4 py-3 font-medium">Status</th>
-                        <th className="px-4 py-3 font-medium">Date</th>
+                        <th className="px-4 py-3 font-medium">Submitted</th>
                       </tr>
                     </thead>
                     <tbody>
-                      <tr className="border-t">
-                        <td
-                          className="px-4 py-4 text-sm text-muted-foreground"
-                          colSpan={4}
-                        >
-                          No applications loaded yet.
-                        </td>
-                      </tr>
+                      {loadError ? (
+                        <tr className="border-t">
+                          <td
+                            className="px-4 py-4 text-sm text-muted-foreground"
+                            colSpan={5}
+                          >
+                            Fix the configuration above, then refresh this page.
+                          </td>
+                        </tr>
+                      ) : rows.length === 0 ? (
+                        <tr className="border-t">
+                          <td
+                            className="px-4 py-4 text-sm text-muted-foreground"
+                            colSpan={5}
+                          >
+                            No applications yet.
+                          </td>
+                        </tr>
+                      ) : (
+                        rows.map((r) => (
+                          <tr key={r.key} className="border-t">
+                            <td className="px-4 py-3 text-sm font-medium">
+                              {r.applicant}
+                            </td>
+                            <td className="px-4 py-3 text-sm text-muted-foreground">
+                              {r.email}
+                            </td>
+                            <td className="px-4 py-3 text-sm">
+                              {r.program}
+                            </td>
+                            <td className="px-4 py-3 text-sm">
+                              <span className="rounded-full bg-muted px-2 py-0.5 text-xs">
+                                {r.status}
+                              </span>
+                            </td>
+                            <td className="px-4 py-3 text-sm text-muted-foreground">
+                              {r.submittedAt}
+                            </td>
+                          </tr>
+                        ))
+                      )}
                     </tbody>
                   </table>
                 </div>
