@@ -1,19 +1,92 @@
+require("dotenv").config();
+
 const dns = require("dns");
 dns.setDefaultResultOrder("ipv4first");
 
 const express = require("express");
 const cors = require("cors");
-require("dotenv").config();
+const dnsPromises = require("dns").promises;
 const { Pool } = require("pg");
 
-const app = express();
+/**
+ * Railway often cannot reach Supabase over IPv6 (ENETUNREACH).
+ * Resolves the DB hostname to IPv4 and connects by IP, with TLS SNI set to
+ * the real hostname (required for Supabase certificates).
+ */
+async function createPoolFromDatabaseUrl(connectionString) {
+  if (!connectionString?.trim()) {
+    throw new Error("DATABASE_URL is not set");
+  }
 
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: {
-    rejectUnauthorized: false,
-  },
-});
+  const normalized = connectionString
+    .trim()
+    .replace(/^postgres:\/\//, "postgresql://");
+
+  let u;
+  try {
+    u = new URL(normalized);
+  } catch (err) {
+    throw new Error(`Invalid DATABASE_URL: ${err.message}`);
+  }
+
+  const logicalHost = u.hostname;
+  if (!logicalHost) {
+    throw new Error("DATABASE_URL is missing hostname");
+  }
+
+  const isLiteralIpv4 = /^\d{1,3}(\.\d{1,3}){3}$/.test(logicalHost);
+  const isLiteralIpv6 = logicalHost.includes(":");
+
+  let connectHost = logicalHost;
+  if (!isLiteralIpv4 && !isLiteralIpv6) {
+    try {
+      const { address } = await dnsPromises.lookup(logicalHost, { family: 4 });
+      connectHost = address;
+    } catch (err) {
+      throw new Error(
+        `Could not resolve database host "${logicalHost}" to IPv4 (${err.code || err.message}). ` +
+          "Try Supabase Settings → Database → Connection pooling → Session mode URI, or check DNS.",
+      );
+    }
+  }
+
+  const port = u.port ? Number(u.port) : 5432;
+  const pathDb = (u.pathname || "/postgres").replace(/^\//, "");
+  const database =
+    decodeURIComponent(pathDb.split("/")[0] || "postgres") || "postgres";
+  const user = decodeURIComponent(u.username || "");
+  const password = decodeURIComponent(u.password || "");
+
+  const hostIsLocal =
+    logicalHost === "localhost" ||
+    logicalHost === "127.0.0.1" ||
+    logicalHost === "::1";
+
+  const sslMode = (u.searchParams.get("sslmode") || "").toLowerCase();
+  const sslDisabled = sslMode === "disable";
+  const useSsl = !hostIsLocal && !sslDisabled;
+
+  console.log(
+    `DB: connecting to ${connectHost}:${port} (host ${logicalHost}, TLS ${useSsl ? "on" : "off"})`,
+  );
+
+  return new Pool({
+    host: connectHost,
+    port,
+    user,
+    password,
+    database,
+    max: 10,
+    ssl: useSsl
+      ? {
+          rejectUnauthorized: false,
+          servername: logicalHost,
+        }
+      : undefined,
+  });
+}
+
+const app = express();
 
 const defaultCorsOrigins = [
   "http://localhost:3000",
@@ -38,7 +111,7 @@ app.use(
     origin: corsOrigin,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type"],
-  })
+  }),
 );
 
 app.use(express.json());
@@ -47,37 +120,42 @@ app.get("/", (req, res) => {
   res.json({ ok: true, message: "BB Deco backend is running" });
 });
 
-app.get("/applications", async (req, res) => {
-  try {
-    const result = await pool.query("SELECT * FROM applications");
-    res.json(result.rows);
-  } catch (err) {
-    console.error("DB ERROR:", err.message);
-    res.status(500).json({
-      error: "Failed to fetch applications",
-      details: err.message,
-    });
-  }
-});
+const PORT = process.env.PORT || 4000;
 
-app.post("/applications", async (req, res) => {
-  try {
-    const {
-      full_name,
-      phone,
-      email,
-      address,
-      gender,
-      date_of_birth,
-      program_applied,
-      education_level,
-      guardian_name,
-      guardian_phone,
-      notes,
-    } = req.body;
+async function main() {
+  const pool = await createPoolFromDatabaseUrl(process.env.DATABASE_URL);
 
-    const result = await pool.query(
-      `INSERT INTO applications (
+  app.get("/applications", async (req, res) => {
+    try {
+      const result = await pool.query("SELECT * FROM applications");
+      res.json(result.rows);
+    } catch (err) {
+      console.error("DB ERROR:", err.message);
+      res.status(500).json({
+        error: "Failed to fetch applications",
+        details: err.message,
+      });
+    }
+  });
+
+  app.post("/applications", async (req, res) => {
+    try {
+      const {
+        full_name,
+        phone,
+        email,
+        address,
+        gender,
+        date_of_birth,
+        program_applied,
+        education_level,
+        guardian_name,
+        guardian_phone,
+        notes,
+      } = req.body;
+
+      const result = await pool.query(
+        `INSERT INTO applications (
         full_name,
         phone,
         email,
@@ -94,34 +172,37 @@ app.post("/applications", async (req, res) => {
         $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11
       )
       RETURNING *`,
-      [
-        full_name,
-        phone,
-        email,
-        address,
-        gender,
-        date_of_birth,
-        program_applied,
-        education_level,
-        guardian_name,
-        guardian_phone,
-        notes || null,
-      ]
-    );
+        [
+          full_name,
+          phone,
+          email,
+          address,
+          gender,
+          date_of_birth,
+          program_applied,
+          education_level,
+          guardian_name,
+          guardian_phone,
+          notes || null,
+        ],
+      );
 
-    res.status(201).json(result.rows[0]);
-  } catch (err) {
-    console.error("DB ERROR:", err.message);
-    res.status(500).json({
-      error: "Failed to create application",
-      details: err.message,
-    });
-  }
+      res.status(201).json(result.rows[0]);
+    } catch (err) {
+      console.error("DB ERROR:", err.message);
+      res.status(500).json({
+        error: "Failed to create application",
+        details: err.message,
+      });
+    }
+  });
+
+  app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+  });
+}
+
+main().catch((err) => {
+  console.error("Fatal startup error:", err.message || err);
+  process.exit(1);
 });
-
-const PORT = process.env.PORT || 4000;
-
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
-
