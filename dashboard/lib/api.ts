@@ -1,4 +1,5 @@
 import { cache } from "react";
+import { getBackendBaseUrl } from "./backend-url";
 
 export type ApplicationRow = {
   id?: number;
@@ -20,13 +21,7 @@ export type ApplicationRow = {
 };
 
 export function resolveApiBase(): string | null {
-  const raw =
-    process.env.API_URL?.trim() || process.env.NEXT_PUBLIC_API_URL?.trim();
-  if (raw) return raw.replace(/\/$/, "");
-  if (process.env.NODE_ENV === "development") {
-    return "http://localhost:4000";
-  }
-  return null;
+  return getBackendBaseUrl();
 }
 
 function formatStatusLabel(value: unknown): string {
@@ -139,7 +134,12 @@ export async function fetchApplicationById(
     if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
       return { ok: false, error: "Unexpected response from API.", status: 500 };
     }
-    return { ok: true, data: parsed as ApplicationRow };
+    const row = { ...(parsed as ApplicationRow) };
+    if (row.id != null && typeof row.id === "string") {
+      const n = Number(row.id);
+      if (!Number.isNaN(n)) row.id = n;
+    }
+    return { ok: true, data: row };
   } catch (e) {
     const msg = e instanceof Error ? e.message : "Request failed";
     return { ok: false, error: msg, status: 503 };

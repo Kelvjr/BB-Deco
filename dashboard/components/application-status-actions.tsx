@@ -2,7 +2,6 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { resolvePublicApiBase } from "@/lib/public-api";
 
 const STATUSES = ["pending", "approved", "rejected", "submitted"] as const;
 
@@ -19,37 +18,36 @@ export function ApplicationStatusActions({
   const [message, setMessage] = useState("");
 
   async function handleSave() {
-    const base = resolvePublicApiBase();
-    if (!base) {
-      setMessage("Set NEXT_PUBLIC_API_URL to update status from the browser.");
-      return;
-    }
     setLoading(true);
     setMessage("");
     try {
-      const res = await fetch(`${base}/applications/${applicationId}`, {
+      const res = await fetch(`/api/applications/${applicationId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status }),
       });
       const text = await res.text();
-      let data: { error?: string } = {};
+      let data: { error?: string; details?: string } = {};
       if (text) {
         try {
-          data = JSON.parse(text) as { error?: string };
+          data = JSON.parse(text) as { error?: string; details?: string };
         } catch {
           setMessage("Unexpected response from server.");
           return;
         }
       }
       if (!res.ok) {
-        setMessage(data.error || `Update failed (${res.status}).`);
+        setMessage(
+          data.details ||
+            data.error ||
+            `Update failed (${res.status}). Is API_URL set on Vercel?`,
+        );
         return;
       }
       setMessage("Saved.");
       router.refresh();
     } catch {
-      setMessage("Could not reach the API.");
+      setMessage("Could not reach the dashboard API route.");
     } finally {
       setLoading(false);
     }
