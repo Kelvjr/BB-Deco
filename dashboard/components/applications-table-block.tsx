@@ -1,8 +1,11 @@
-import Link from "next/link";
 import {
   applicationTableRows,
   fetchApplicationsCached,
 } from "@/lib/api";
+import {
+  ApplicationsTableBody,
+  type ApplicationTableRowView,
+} from "@/components/applications-table-body";
 
 export async function ApplicationsTableBlock({
   title = "Recent applications",
@@ -16,7 +19,7 @@ export async function ApplicationsTableBlock({
 }) {
   const result = await fetchApplicationsCached(statusFilter);
   const applications = result.ok ? result.data : [];
-  const rows = applicationTableRows(applications);
+  const rows: ApplicationTableRowView[] = applicationTableRows(applications);
   const loadError = result.ok ? null : result.error;
 
   return (
@@ -59,8 +62,8 @@ export async function ApplicationsTableBlock({
                 </th>
               </tr>
             </thead>
-            <tbody>
-              {loadError ? (
+            {loadError ? (
+              <tbody>
                 <tr className="border-t border-black/10">
                   <td
                     className="px-3 py-3 text-xs text-gray-500 md:px-4 md:text-sm"
@@ -69,7 +72,9 @@ export async function ApplicationsTableBlock({
                     Fix the configuration above, then refresh this page.
                   </td>
                 </tr>
-              ) : rows.length === 0 ? (
+              </tbody>
+            ) : rows.length === 0 ? (
+              <tbody>
                 <tr className="border-t border-black/10">
                   <td
                     className="px-3 py-3 text-xs text-gray-500 md:px-4 md:text-sm"
@@ -78,53 +83,17 @@ export async function ApplicationsTableBlock({
                     No applications in this view.
                   </td>
                 </tr>
-              ) : (
-                rows.map((r) => (
-                  <tr key={r.key} className="border-t border-black/10">
-                    <td className="px-3 py-2 text-xs font-medium md:px-4 md:py-3 md:text-sm">
-                      {r.id != null ? (
-                        <Link
-                          href={`/applications/${r.id}`}
-                          className="text-emerald-800 underline decoration-emerald-800/30 underline-offset-2 hover:decoration-emerald-800"
-                        >
-                          {r.applicant}
-                        </Link>
-                      ) : (
-                        r.applicant
-                      )}
-                    </td>
-                    <td className="px-3 py-2 text-xs text-gray-500 md:px-4 md:py-3 md:text-sm">
-                      {r.email}
-                    </td>
-                    <td className="px-3 py-2 text-xs text-gray-900 md:px-4 md:py-3 md:text-sm">
-                      {r.program}
-                    </td>
-                    <td className="px-3 py-2 text-xs md:px-4 md:py-3 md:text-sm">
-                      <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-medium text-emerald-800 md:text-xs">
-                        {r.status}
-                      </span>
-                    </td>
-                    <td className="px-3 py-2 text-xs text-gray-500 md:px-4 md:py-3 md:text-sm">
-                      {r.submittedAt}
-                    </td>
-                    <td className="px-3 py-2 text-xs md:px-4 md:py-3 md:text-sm">
-                      {r.id != null ? (
-                        <Link
-                          href={`/applications/${r.id}`}
-                          className="font-medium text-emerald-800 hover:underline"
-                        >
-                          Open
-                        </Link>
-                      ) : (
-                        "—"
-                      )}
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
+              </tbody>
+            ) : (
+              <ApplicationsTableBody rows={rows} />
+            )}
           </table>
         </div>
+        {!loadError && rows.length > 0 ? (
+          <p className="mt-2 text-[11px] text-gray-500">
+            Tip: click anywhere on a row to open that application.
+          </p>
+        ) : null}
       </section>
     </div>
   );

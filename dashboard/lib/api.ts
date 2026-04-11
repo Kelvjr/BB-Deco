@@ -2,7 +2,8 @@ import { cache } from "react";
 import { getBackendBaseUrl } from "./backend-url";
 
 export type ApplicationRow = {
-  id?: number;
+  id?: number | string;
+  application_id?: number | string;
   full_name?: string | null;
   email?: string | null;
   phone?: string | null;
@@ -134,12 +135,7 @@ export async function fetchApplicationById(
     if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
       return { ok: false, error: "Unexpected response from API.", status: 500 };
     }
-    const row = { ...(parsed as ApplicationRow) };
-    if (row.id != null && typeof row.id === "string") {
-      const n = Number(row.id);
-      if (!Number.isNaN(n)) row.id = n;
-    }
-    return { ok: true, data: row };
+    return { ok: true, data: parsed as ApplicationRow };
   } catch (e) {
     const msg = e instanceof Error ? e.message : "Request failed";
     return { ok: false, error: msg, status: 503 };
@@ -157,13 +153,24 @@ function formatSubmittedAt(row: ApplicationRow): string {
   return Number.isNaN(d.getTime()) ? raw : d.toLocaleString();
 }
 
+/** Stable string for URLs (integer, bigint string, uuid, etc.). */
+export function applicationLinkId(row: ApplicationRow): string | undefined {
+  const candidates: unknown[] = [row.id, row.application_id];
+  for (const c of candidates) {
+    if (c == null) continue;
+    if (typeof c === "bigint") return c.toString();
+    const s = String(c).trim();
+    if (s !== "") return s;
+  }
+  return undefined;
+}
+
 export function applicationTableRows(rows: ApplicationRow[]) {
   return rows.map((row, index) => {
-    const idNum =
-      row.id != null && !Number.isNaN(Number(row.id)) ? Number(row.id) : undefined;
+    const linkId = applicationLinkId(row);
     return {
-      id: idNum,
-      key: String(row.id ?? `${row.email ?? "row"}-${index}`),
+      linkId,
+      key: linkId ?? `${row.email ?? "row"}-${index}`,
       applicant: row.full_name?.trim() || "—",
       email: row.email?.trim() || "—",
       program: row.program_applied?.trim() || "—",

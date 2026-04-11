@@ -45,8 +45,8 @@ export default async function ApplicationDetailPage({
   }
 
   const row = result.data;
-  const numId = Number(row.id);
-  if (!Number.isFinite(numId) || numId < 1) notFound();
+  const applicationIdStr = String(row.id ?? id ?? "").trim();
+  if (!applicationIdStr) notFound();
 
   const statusStr =
     typeof row.status === "string" && row.status.trim()
@@ -91,7 +91,7 @@ export default async function ApplicationDetailPage({
       <main className="flex-1 bg-white p-4 md:p-6">
         <div className="mx-auto max-w-2xl space-y-5">
           <ApplicationStatusActions
-            applicationId={numId}
+            applicationId={applicationIdStr}
             initialStatus={statusStr}
           />
 

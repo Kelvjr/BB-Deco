@@ -136,6 +136,24 @@ async function main() {
 
   const APPLICATION_STATUSES = ["pending", "approved", "rejected", "submitted"];
 
+  /** JSON.stringify cannot encode bigint; Postgres may return bigint for id. */
+  function rowForJson(row) {
+    const o = { ...row };
+    for (const key of Object.keys(o)) {
+      if (typeof o[key] === "bigint") {
+        o[key] = o[key].toString();
+      }
+    }
+    return o;
+  }
+
+  /** Match by primary key whether it is integer, bigint, or uuid. */
+  function safeIdParam(raw) {
+    const s = String(raw ?? "").trim();
+    if (!s || s.length > 128) return null;
+    return s;
+  }
+
   app.get("/applications", async (req, res) => {
     try {
       const raw = req.query.status;
@@ -156,13 +174,16 @@ async function main() {
         );
       }
 
-      const rows = result.rows.map((row) => ({
-        ...row,
-        links: {
-          self: `/applications/${row.id}`,
-          collection: "/applications",
-        },
-      }));
+      const rows = result.rows.map((row) => {
+        const base = rowForJson(row);
+        return {
+          ...base,
+          links: {
+            self: `/applications/${base.id}`,
+            collection: "/applications",
+          },
+        };
+      });
 
       res.json(rows);
     } catch (err) {
@@ -175,21 +196,21 @@ async function main() {
   });
 
   app.get("/applications/:id", async (req, res) => {
-    const id = Number.parseInt(String(req.params.id), 10);
-    if (!Number.isFinite(id) || id < 1) {
+    const idParam = safeIdParam(req.params.id);
+    if (!idParam) {
       return res.status(404).json({ error: "Application not found" });
     }
 
     try {
       const result = await pool.query(
-        "SELECT * FROM applications WHERE id = $1",
-        [id],
+        "SELECT * FROM applications WHERE id::text = $1 LIMIT 1",
+        [idParam],
       );
       if (result.rowCount === 0) {
         return res.status(404).json({ error: "Application not found" });
       }
 
-      const row = result.rows[0];
+      const row = rowForJson(result.rows[0]);
       res.json({
         ...row,
         links: {
@@ -257,7 +278,7 @@ async function main() {
         ],
       );
 
-      const created = result.rows[0];
+      const created = rowForJson(result.rows[0]);
       res.status(201).json({
         ...created,
         links: {
@@ -275,8 +296,8 @@ async function main() {
   });
 
   app.patch("/applications/:id", async (req, res) => {
-    const id = Number.parseInt(String(req.params.id), 10);
-    if (!Number.isFinite(id) || id < 1) {
+    const idParam = safeIdParam(req.params.id);
+    if (!idParam) {
       return res.status(404).json({ error: "Application not found" });
     }
 
@@ -292,14 +313,14 @@ async function main() {
 
     try {
       const result = await pool.query(
-        `UPDATE applications SET status = $1 WHERE id = $2 RETURNING *`,
-        [nextStatus, id],
+        `UPDATE applications SET status = $1 WHERE id::text = $2 RETURNING *`,
+        [nextStatus, idParam],
       );
       if (result.rowCount === 0) {
         return res.status(404).json({ error: "Application not found" });
       }
 
-      const row = result.rows[0];
+      const row = rowForJson(result.rows[0]);
       res.json({
         ...row,
         links: {

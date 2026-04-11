@@ -9,7 +9,7 @@ export function ApplicationStatusActions({
   applicationId,
   initialStatus,
 }: {
-  applicationId: number;
+  applicationId: string;
   initialStatus: string;
 }) {
   const router = useRouter();
