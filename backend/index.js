@@ -9,9 +9,9 @@ const dnsPromises = require("dns").promises;
 const { Pool } = require("pg");
 
 /**
- * Railway often cannot reach Supabase over IPv6 (ENETUNREACH).
- * Resolves the DB hostname to IPv4 and connects by IP, with TLS SNI set to
- * the real hostname (required for Supabase certificates).
+ * Supabase "direct" host db.<ref>.supabase.co is IPv6-only in DNS (no A record).
+ * Railway cannot route to it (ENETUNREACH). Pooler hosts (aws-0-*.pooler.supabase.com)
+ * have IPv4; we resolve to IPv4 and connect by IP with TLS SNI = hostname.
  */
 async function createPoolFromDatabaseUrl(connectionString) {
   if (!connectionString?.trim()) {
@@ -34,6 +34,9 @@ async function createPoolFromDatabaseUrl(connectionString) {
     throw new Error("DATABASE_URL is missing hostname");
   }
 
+  const isSupabaseDirectDb =
+    /^db\.[a-z0-9]+\.supabase\.co$/i.test(logicalHost);
+
   const isLiteralIpv4 = /^\d{1,3}(\.\d{1,3}){3}$/.test(logicalHost);
   const isLiteralIpv6 = logicalHost.includes(":");
 
@@ -43,10 +46,16 @@ async function createPoolFromDatabaseUrl(connectionString) {
       const { address } = await dnsPromises.lookup(logicalHost, { family: 4 });
       connectHost = address;
     } catch (err) {
-      throw new Error(
-        `Could not resolve database host "${logicalHost}" to IPv4 (${err.code || err.message}). ` +
-          "Try Supabase Settings → Database → Connection pooling → Session mode URI, or check DNS.",
-      );
+      if (isSupabaseDirectDb) {
+        throw new Error(
+          `DATABASE_URL uses Supabase direct host "${logicalHost}" (IPv6-only DNS, no IPv4). ` +
+            `Railway and many hosts cannot open that connection.\n\n` +
+            `Fix: Supabase → Project Settings → Database → Connection string → set Method to "Session pooler" ` +
+            `(port 5432). Copy the full URI (host will be like aws-0-<region>.pooler.supabase.com), ` +
+            `paste it as DATABASE_URL on Railway, redeploy.`,
+        );
+      }
+      connectHost = logicalHost;
     }
   }
 
