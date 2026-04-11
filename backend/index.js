@@ -323,16 +323,51 @@ async function main() {
       });
     }
 
+    const client = await pool.connect();
     try {
-      const result = await pool.query(
+      await client.query("BEGIN");
+
+      const result = await client.query(
         `UPDATE applications SET status = $1 WHERE id::text = $2 RETURNING *`,
         [nextStatus, idParam],
       );
       if (result.rowCount === 0) {
+        await client.query("ROLLBACK");
         return res.status(404).json({ error: "Application not found" });
       }
 
       const row = rowForJson(result.rows[0]);
+
+      if (nextStatus === "approved") {
+        const appId = String(row.id);
+        const existing = await client.query(
+          "SELECT 1 FROM students WHERE application_id = $1 LIMIT 1",
+          [appId],
+        );
+        if (existing.rowCount === 0) {
+          const seqRes = await client.query(
+            "SELECT nextval('student_number_seq') AS n",
+          );
+          const n = Number(seqRes.rows[0].n);
+          const yr = new Date().getFullYear();
+          const studentNumber = `BB-${yr}-${String(n).padStart(5, "0")}`;
+          await client.query(
+            `INSERT INTO students (student_number, application_id, full_name, email, phone, program_applied)
+             VALUES ($1, $2, $3, $4, $5, $6)`,
+            [
+              studentNumber,
+              appId,
+              row.full_name ?? null,
+              row.email ?? null,
+              row.phone ?? null,
+              row.program_applied ?? null,
+            ],
+          );
+        }
+      }
+
+      await client.query("COMMIT");
+
       res.json({
         ...row,
         links: {
@@ -341,11 +376,18 @@ async function main() {
         },
       });
     } catch (err) {
+      try {
+        await client.query("ROLLBACK");
+      } catch (_) {
+        /* ignore */
+      }
       console.error("DB ERROR:", err.message);
       res.status(500).json({
         error: "Failed to update application",
         details: err.message,
       });
+    } finally {
+      client.release();
     }
   });
 

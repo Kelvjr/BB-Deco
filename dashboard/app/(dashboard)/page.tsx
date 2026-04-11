@@ -3,9 +3,19 @@ import { fetchApplicationsCached } from "@/lib/api";
 
 export const dynamic = "force-dynamic";
 
+function normStatus(s: unknown): string {
+  if (typeof s !== "string" || !s.trim()) return "pending";
+  return s.trim().toLowerCase();
+}
+
 export default async function DashboardHomePage() {
   const result = await fetchApplicationsCached();
-  const total = result.ok ? result.data.length : 0;
+  const rows = result.ok ? result.data : [];
+  const total = rows.length;
+  const pendingReview = rows.filter((r) =>
+    ["pending", "submitted"].includes(normStatus(r.status)),
+  ).length;
+  const approved = rows.filter((r) => normStatus(r.status) === "approved").length;
   const loadError = result.ok ? null : result.error;
 
   return (
@@ -48,13 +58,15 @@ export default async function DashboardHomePage() {
             <div className="rounded-2xl border border-black/10 bg-white p-4 shadow-sm">
               <p className="text-xs text-gray-500">Pending review</p>
               <h2 className="mt-2 text-2xl font-semibold text-gray-900">
-                {total}
+                {pendingReview}
               </h2>
             </div>
 
             <div className="rounded-2xl border border-black/10 bg-white p-4 shadow-sm">
               <p className="text-xs text-gray-500">Approved</p>
-              <h2 className="mt-2 text-2xl font-semibold text-gray-900">0</h2>
+              <h2 className="mt-2 text-2xl font-semibold text-gray-900">
+                {approved}
+              </h2>
             </div>
           </section>
 

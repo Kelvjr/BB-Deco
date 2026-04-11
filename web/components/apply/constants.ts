@@ -1,11 +1,8 @@
 export const PROGRAM_OPTIONS = [
-  "Professional Culinary Arts",
-  "Pastry & Baking",
-  "Catering Operations",
-  "Food Safety & Hygiene",
-  "Hospitality Management",
-  "Short Course — Intro to Kitchen",
-  "Other / Undecided",
+  "Catering and Hospitality",
+  "Pastry Arts",
+  "Cake Making and Decorating",
+  "Floral & Events Management",
 ] as const;
 
 export const EDUCATION_OPTIONS = [

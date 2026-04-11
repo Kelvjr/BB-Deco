@@ -27,10 +27,10 @@ export function ApplicationStatusActions({
         body: JSON.stringify({ status }),
       });
       const text = await res.text();
-      let data: { error?: string; details?: string } = {};
+      let data: { error?: string; details?: string; status?: string } = {};
       if (text) {
         try {
-          data = JSON.parse(text) as { error?: string; details?: string };
+          data = JSON.parse(text) as typeof data;
         } catch {
           setMessage("Unexpected response from server.");
           return;
@@ -43,6 +43,9 @@ export function ApplicationStatusActions({
             `Update failed (${res.status}). Is API_URL set on Vercel?`,
         );
         return;
+      }
+      if (typeof data.status === "string" && data.status.trim()) {
+        setStatus(data.status.trim().toLowerCase());
       }
       setMessage("Saved.");
       router.refresh();

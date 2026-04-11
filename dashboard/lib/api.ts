@@ -26,9 +26,15 @@ export function resolveApiBase(): string | null {
 }
 
 function formatStatusLabel(value: unknown): string {
-  if (typeof value !== "string" || !value.trim()) return "Pending";
+  if (typeof value !== "string" || !value.trim()) return "Pending review";
   const s = value.trim().toLowerCase();
-  return s.charAt(0).toUpperCase() + s.slice(1);
+  const labels: Record<string, string> = {
+    pending: "Pending review",
+    submitted: "Pending review",
+    approved: "Approved",
+    rejected: "Rejected",
+  };
+  return labels[s] ?? s.charAt(0).toUpperCase() + s.slice(1);
 }
 
 export async function fetchApplications(
