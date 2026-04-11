@@ -146,17 +146,17 @@ export function DashboardSidebar({
   const students = pathname.startsWith("/students");
 
   return (
-    <aside className="hidden h-screen w-[13.75rem] shrink-0 flex-col border-r border-black/10 bg-white md:flex">
+    <aside className="hidden h-screen w-[15.5rem] shrink-0 flex-col border-r border-black/10 bg-white md:flex">
       <Link
         href="/"
-        className="flex shrink-0 items-center gap-2 border-b border-black/10 px-3 py-2.5 transition-opacity hover:opacity-90"
+        className="flex shrink-0 flex-col items-stretch border-b border-black/10 px-3 py-4 transition-opacity hover:opacity-90"
       >
         <Image
           src="/logo.svg"
           alt="BB Deco & Catering Training Centre"
-          width={140}
-          height={40}
-          className="h-9 w-auto max-w-[9.5rem] shrink-0 object-contain object-left"
+          width={320}
+          height={120}
+          className="mx-auto h-16 w-full max-w-[13rem] object-contain object-center sm:h-[4.5rem]"
           priority
         />
         <span className="sr-only">BB Deco Catering — home</span>
