@@ -118,7 +118,7 @@ const corsOrigin =
 app.use(
   cors({
     origin: corsOrigin,
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    methods: ["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type"],
   }),
 );
@@ -134,14 +134,73 @@ const PORT = process.env.PORT || 4000;
 async function main() {
   const pool = await createPoolFromDatabaseUrl(process.env.DATABASE_URL);
 
+  const APPLICATION_STATUSES = ["pending", "approved", "rejected", "submitted"];
+
   app.get("/applications", async (req, res) => {
     try {
-      const result = await pool.query("SELECT * FROM applications");
-      res.json(result.rows);
+      const raw = req.query.status;
+      const status =
+        typeof raw === "string" ? raw.trim().toLowerCase() : null;
+
+      let result;
+      if (status && APPLICATION_STATUSES.includes(status)) {
+        result = await pool.query(
+          `SELECT * FROM applications
+           WHERE lower(trim(status)) = $1
+           ORDER BY id DESC`,
+          [status],
+        );
+      } else {
+        result = await pool.query(
+          "SELECT * FROM applications ORDER BY id DESC",
+        );
+      }
+
+      const rows = result.rows.map((row) => ({
+        ...row,
+        links: {
+          self: `/applications/${row.id}`,
+          collection: "/applications",
+        },
+      }));
+
+      res.json(rows);
     } catch (err) {
       console.error("DB ERROR:", err.message);
       res.status(500).json({
         error: "Failed to fetch applications",
+        details: err.message,
+      });
+    }
+  });
+
+  app.get("/applications/:id", async (req, res) => {
+    const id = Number.parseInt(String(req.params.id), 10);
+    if (!Number.isFinite(id) || id < 1) {
+      return res.status(404).json({ error: "Application not found" });
+    }
+
+    try {
+      const result = await pool.query(
+        "SELECT * FROM applications WHERE id = $1",
+        [id],
+      );
+      if (result.rowCount === 0) {
+        return res.status(404).json({ error: "Application not found" });
+      }
+
+      const row = result.rows[0];
+      res.json({
+        ...row,
+        links: {
+          self: `/applications/${row.id}`,
+          collection: "/applications",
+        },
+      });
+    } catch (err) {
+      console.error("DB ERROR:", err.message);
+      res.status(500).json({
+        error: "Failed to fetch application",
         details: err.message,
       });
     }
@@ -175,10 +234,11 @@ async function main() {
         education_level,
         guardian_name,
         guardian_phone,
-        notes
+        notes,
+        status
       )
       VALUES (
-        $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11
+        $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12
       )
       RETURNING *`,
         [
@@ -193,14 +253,64 @@ async function main() {
           guardian_name,
           guardian_phone,
           notes || null,
+          "pending",
         ],
       );
 
-      res.status(201).json(result.rows[0]);
+      const created = result.rows[0];
+      res.status(201).json({
+        ...created,
+        links: {
+          self: `/applications/${created.id}`,
+          collection: "/applications",
+        },
+      });
     } catch (err) {
       console.error("DB ERROR:", err.message);
       res.status(500).json({
         error: "Failed to create application",
+        details: err.message,
+      });
+    }
+  });
+
+  app.patch("/applications/:id", async (req, res) => {
+    const id = Number.parseInt(String(req.params.id), 10);
+    if (!Number.isFinite(id) || id < 1) {
+      return res.status(404).json({ error: "Application not found" });
+    }
+
+    const raw = req.body?.status;
+    const nextStatus =
+      typeof raw === "string" ? raw.trim().toLowerCase() : null;
+    if (!nextStatus || !APPLICATION_STATUSES.includes(nextStatus)) {
+      return res.status(400).json({
+        error: "Invalid or missing status",
+        allowed: APPLICATION_STATUSES,
+      });
+    }
+
+    try {
+      const result = await pool.query(
+        `UPDATE applications SET status = $1 WHERE id = $2 RETURNING *`,
+        [nextStatus, id],
+      );
+      if (result.rowCount === 0) {
+        return res.status(404).json({ error: "Application not found" });
+      }
+
+      const row = result.rows[0];
+      res.json({
+        ...row,
+        links: {
+          self: `/applications/${row.id}`,
+          collection: "/applications",
+        },
+      });
+    } catch (err) {
+      console.error("DB ERROR:", err.message);
+      res.status(500).json({
+        error: "Failed to update application",
         details: err.message,
       });
     }

@@ -1,25 +1,19 @@
-import Link from "next/link";
+import { ApplicationsTableBlock } from "@/components/applications-table-block";
 import { WorkspaceShell } from "@/components/workspace-shell";
+
+export const dynamic = "force-dynamic";
 
 export default function ApplicationsPendingPage() {
   return (
     <WorkspaceShell
       title="Pending applications"
-      subtitle="Awaiting review or decision."
+      subtitle="Filtered with GET /applications?status=pending"
     >
-      <div className="rounded-2xl border border-dashed border-black/15 bg-gray-50/40 px-5 py-12 text-center">
-        <p className="text-sm font-medium text-gray-900">
-          No status field yet
-        </p>
-        <p className="mt-2 text-xs text-gray-500">
-          When your API stores a pending status, this view will filter
-          automatically. For now, see{" "}
-          <Link className="text-emerald-800 underline" href="/applications/all">
-            All applications
-          </Link>
-          .
-        </p>
-      </div>
+      <ApplicationsTableBlock
+        title="Pending review"
+        description="New submissions default to pending until you change status."
+        statusFilter="pending"
+      />
     </WorkspaceShell>
   );
 }

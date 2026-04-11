@@ -3,7 +3,7 @@ import { WorkspaceShell } from "@/components/workspace-shell";
 
 export const dynamic = "force-dynamic";
 
-export default async function ApplicationsAllPage() {
+export default function ApplicationsAllPage() {
   return (
     <WorkspaceShell
       title="All applications"

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import {
   applicationTableRows,
   fetchApplicationsCached,
@@ -6,11 +7,14 @@ import {
 export async function ApplicationsTableBlock({
   title = "Recent applications",
   description = "Submissions from the public apply form (live from API).",
+  statusFilter,
 }: {
   title?: string;
   description?: string;
+  /** When set, calls GET /applications?status=… */
+  statusFilter?: "pending" | "approved" | "rejected" | "submitted";
 }) {
-  const result = await fetchApplicationsCached();
+  const result = await fetchApplicationsCached(statusFilter);
   const applications = result.ok ? result.data : [];
   const rows = applicationTableRows(applications);
   const loadError = result.ok ? null : result.error;
@@ -33,8 +37,8 @@ export async function ApplicationsTableBlock({
           <p className="text-xs text-gray-500">{description}</p>
         </div>
 
-        <div className="mt-4 overflow-hidden rounded-xl border border-black/10">
-          <table className="w-full text-left">
+        <div className="mt-4 overflow-x-auto overflow-y-hidden rounded-xl border border-black/10">
+          <table className="w-full min-w-[36rem] text-left">
             <thead className="bg-gray-50 text-xs text-gray-700 md:text-sm">
               <tr>
                 <th className="px-3 py-2 font-medium md:px-4 md:py-3">
@@ -50,6 +54,9 @@ export async function ApplicationsTableBlock({
                 <th className="px-3 py-2 font-medium md:px-4 md:py-3">
                   Submitted
                 </th>
+                <th className="px-3 py-2 font-medium md:px-4 md:py-3">
+                  View
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -57,7 +64,7 @@ export async function ApplicationsTableBlock({
                 <tr className="border-t border-black/10">
                   <td
                     className="px-3 py-3 text-xs text-gray-500 md:px-4 md:text-sm"
-                    colSpan={5}
+                    colSpan={6}
                   >
                     Fix the configuration above, then refresh this page.
                   </td>
@@ -66,16 +73,25 @@ export async function ApplicationsTableBlock({
                 <tr className="border-t border-black/10">
                   <td
                     className="px-3 py-3 text-xs text-gray-500 md:px-4 md:text-sm"
-                    colSpan={5}
+                    colSpan={6}
                   >
-                    No applications yet.
+                    No applications in this view.
                   </td>
                 </tr>
               ) : (
                 rows.map((r) => (
                   <tr key={r.key} className="border-t border-black/10">
-                    <td className="px-3 py-2 text-xs font-medium text-gray-900 md:px-4 md:py-3 md:text-sm">
-                      {r.applicant}
+                    <td className="px-3 py-2 text-xs font-medium md:px-4 md:py-3 md:text-sm">
+                      {r.id != null ? (
+                        <Link
+                          href={`/applications/${r.id}`}
+                          className="text-emerald-800 underline decoration-emerald-800/30 underline-offset-2 hover:decoration-emerald-800"
+                        >
+                          {r.applicant}
+                        </Link>
+                      ) : (
+                        r.applicant
+                      )}
                     </td>
                     <td className="px-3 py-2 text-xs text-gray-500 md:px-4 md:py-3 md:text-sm">
                       {r.email}
@@ -90,6 +106,18 @@ export async function ApplicationsTableBlock({
                     </td>
                     <td className="px-3 py-2 text-xs text-gray-500 md:px-4 md:py-3 md:text-sm">
                       {r.submittedAt}
+                    </td>
+                    <td className="px-3 py-2 text-xs md:px-4 md:py-3 md:text-sm">
+                      {r.id != null ? (
+                        <Link
+                          href={`/applications/${r.id}`}
+                          className="font-medium text-emerald-800 hover:underline"
+                        >
+                          Open
+                        </Link>
+                      ) : (
+                        "—"
+                      )}
                     </td>
                   </tr>
                 ))
