@@ -16,12 +16,9 @@ import {
   Settings,
   UserCog,
   Users,
-  UtensilsCrossed,
+  User,
   Wallet,
 } from "lucide-react";
-
-const AVATAR_SRC =
-  "https://images.pexels.com/photos/3785079/pexels-photo-3785079.jpeg?auto=compress&cs=tinysrgb&w=144&h=144&dpr=2";
 
 function SectionLabel({ children }: { children: ReactNode }) {
   return (
@@ -150,14 +147,20 @@ export function DashboardSidebar({
 
   return (
     <aside className="hidden h-screen w-[13.75rem] shrink-0 flex-col border-r border-black/10 bg-white md:flex">
-      <div className="flex shrink-0 items-center gap-2 border-b border-black/10 px-3 py-2.5">
-        <div className="flex size-7 shrink-0 items-center justify-center rounded-md bg-green-600 shadow-[0px_2px_4px_0px_rgba(16,185,129,0.20)]">
-          <UtensilsCrossed className="size-3.5 text-white" strokeWidth={2} />
-        </div>
-        <span className="truncate text-sm font-semibold leading-tight text-gray-900">
-          BB Deco Catering
-        </span>
-      </div>
+      <Link
+        href="/"
+        className="flex shrink-0 items-center gap-2 border-b border-black/10 px-3 py-2.5 transition-opacity hover:opacity-90"
+      >
+        <Image
+          src="/logo.svg"
+          alt="BB Deco & Catering Training Centre"
+          width={140}
+          height={40}
+          className="h-9 w-auto max-w-[9.5rem] shrink-0 object-contain object-left"
+          priority
+        />
+        <span className="sr-only">BB Deco Catering — home</span>
+      </Link>
 
       <nav className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-2 py-2">
         <div className="flex flex-col gap-3.5">
@@ -315,13 +318,12 @@ export function DashboardSidebar({
 
       <div className="shrink-0 border-t border-black/10 p-2.5">
         <div className="flex items-center gap-2">
-          <Image
-            src={AVATAR_SRC}
-            alt="Profile"
-            width={32}
-            height={32}
-            className="size-8 shrink-0 rounded-xl border border-black/10 object-cover"
-          />
+          <div
+            className="flex size-8 shrink-0 items-center justify-center rounded-xl border border-black/10 bg-gray-50"
+            aria-hidden
+          >
+            <User className="size-4 text-gray-500" strokeWidth={2} />
+          </div>
           <div className="min-w-0 flex flex-col leading-tight">
             <span className="truncate text-[11px] font-semibold text-gray-900">
               Sarah Jenkins

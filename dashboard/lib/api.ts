@@ -194,3 +194,96 @@ export const fetchApplicationsCached = cache(async (statusFilter?: string) =>
 export const fetchApplicationByIdCached = cache(async (id: string) =>
   fetchApplicationById(id),
 );
+
+export type StudentRow = {
+  id?: string | number;
+  student_number?: string | null;
+  application_id?: string | null;
+  full_name?: string | null;
+  email?: string | null;
+  phone?: string | null;
+  program_applied?: string | null;
+  created_at?: string | null;
+  [key: string]: unknown;
+};
+
+export async function fetchStudents(): Promise<
+  | { ok: true; data: StudentRow[] }
+  | { ok: false; error: string }
+> {
+  const base = resolveApiBase();
+  if (!base) {
+    return {
+      ok: false,
+      error:
+        "API URL is not set. Add API_URL or NEXT_PUBLIC_API_URL (Railway backend URL) in Vercel project settings.",
+    };
+  }
+
+  try {
+    const res = await fetch(`${base}/students`, { cache: "no-store" });
+    const text = await res.text();
+    let parsed: unknown = [];
+    if (text) {
+      try {
+        parsed = JSON.parse(text);
+      } catch {
+        return {
+          ok: false,
+          error: `Could not read students (bad response, HTTP ${res.status}).`,
+        };
+      }
+    }
+    if (!res.ok) {
+      const body = parsed as { error?: string; details?: string };
+      return {
+        ok: false,
+        error: body.details || body.error || `HTTP ${res.status}`,
+      };
+    }
+    if (!Array.isArray(parsed)) {
+      return { ok: false, error: "Unexpected response from API." };
+    }
+    return { ok: true, data: parsed as StudentRow[] };
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : "Request failed";
+    return {
+      ok: false,
+      error:
+        msg === "fetch failed"
+          ? "Could not reach the API. Check API_URL and that the backend is running."
+          : msg,
+    };
+  }
+}
+
+export type StudentTableRowView = {
+  key: string;
+  studentId: string;
+  name: string;
+  email: string;
+  program: string;
+  phone: string;
+  joinedAt: string;
+};
+
+export function studentTableRows(rows: StudentRow[]): StudentTableRowView[] {
+  return rows.map((row, index) => {
+    const key =
+      (typeof row.id === "string" || typeof row.id === "number") &&
+      String(row.id).trim() !== ""
+        ? String(row.id)
+        : `${row.student_number ?? "row"}-${index}`;
+    return {
+      key,
+      studentId: row.student_number?.trim() || "—",
+      name: row.full_name?.trim() || "—",
+      email: row.email?.trim() || "—",
+      program: row.program_applied?.trim() || "—",
+      phone: row.phone?.trim() || "—",
+      joinedAt: formatSubmittedAt(row as ApplicationRow),
+    };
+  });
+}
+
+export const fetchStudentsCached = cache(async () => fetchStudents());

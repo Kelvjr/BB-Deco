@@ -307,6 +307,22 @@ async function main() {
     }
   });
 
+  app.get("/students", async (_req, res) => {
+    try {
+      const result = await pool.query(
+        `SELECT * FROM students ORDER BY created_at DESC NULLS LAST, id DESC`,
+      );
+      const rows = result.rows.map((row) => rowForJson(row));
+      res.json(rows);
+    } catch (err) {
+      console.error("DB ERROR:", err.message);
+      res.status(500).json({
+        error: "Failed to fetch students",
+        details: err.message,
+      });
+    }
+  });
+
   app.patch("/applications/:id", async (req, res) => {
     const idParam = safeIdParam(req.params.id);
     if (!idParam) {
