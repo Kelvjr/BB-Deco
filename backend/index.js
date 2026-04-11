@@ -241,6 +241,10 @@ async function main() {
         guardian_name,
         guardian_phone,
         notes,
+        identity_photo,
+        institution,
+        consent_accurate,
+        consent_communications,
       } = req.body;
 
       const result = await pool.query(
@@ -256,10 +260,14 @@ async function main() {
         guardian_name,
         guardian_phone,
         notes,
-        status
+        status,
+        identity_photo,
+        institution,
+        consent_accurate,
+        consent_communications
       )
       VALUES (
-        $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12
+        $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16
       )
       RETURNING *`,
         [
@@ -275,6 +283,10 @@ async function main() {
           guardian_phone,
           notes || null,
           "pending",
+          identity_photo || null,
+          institution || null,
+          Boolean(consent_accurate),
+          Boolean(consent_communications),
         ],
       );
 
