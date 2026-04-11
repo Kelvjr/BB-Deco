@@ -1,3 +1,5 @@
+import { cache } from "react";
+
 export type ApplicationRow = {
   id?: number;
   full_name?: string | null;
@@ -88,3 +90,6 @@ export function applicationTableRows(rows: ApplicationRow[]) {
     submittedAt: formatSubmittedAt(row),
   }));
 }
+
+/** One fetch per request when used from both layout and page. */
+export const fetchApplicationsCached = cache(fetchApplications);
