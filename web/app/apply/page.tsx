@@ -13,6 +13,15 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 
+function resolvePublicApiBase(): string | null {
+  const raw = process.env.NEXT_PUBLIC_API_URL?.trim();
+  if (raw) return raw.replace(/\/$/, "");
+  if (process.env.NODE_ENV === "development") {
+    return "http://localhost:4000";
+  }
+  return null;
+}
+
 export default function ApplyPage() {
   const [form, setForm] = useState({
     full_name: "",
@@ -43,6 +52,14 @@ export default function ApplyPage() {
     setMessage("");
 
     try {
+      const apiBase = resolvePublicApiBase();
+      if (!apiBase) {
+        setMessage(
+          "Applications cannot be sent because the site is missing server configuration (NEXT_PUBLIC_API_URL). Please contact the school.",
+        );
+        return;
+      }
+
       const payload = {
         ...form,
         phone: form.phone || null,
@@ -56,21 +73,28 @@ export default function ApplyPage() {
         notes: form.notes || null,
       };
 
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/applications`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(payload),
+      const res = await fetch(`${apiBase}/applications`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
         },
-      );
+        body: JSON.stringify(payload),
+      });
 
-      const data = await res.json();
+      const text = await res.text();
+      let data: { details?: string; error?: string } = {};
+      if (text) {
+        try {
+          data = JSON.parse(text) as typeof data;
+        } catch {
+          throw new Error(
+            `Unexpected response from server (${res.status}). Please try again later.`,
+          );
+        }
+      }
 
       if (!res.ok) {
-        throw new Error(data.details || data.error || "Failed");
+        throw new Error(data.details || data.error || "Failed to submit");
       }
 
       setMessage("Application submitted successfully!");
@@ -87,8 +111,13 @@ export default function ApplyPage() {
         guardian_phone: "",
         notes: "",
       });
-    } catch (err: any) {
-      setMessage(err.message || "Something went wrong");
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Something went wrong";
+      setMessage(
+        msg === "Failed to fetch"
+          ? "Could not reach the admissions server. If you are on the public website, the service may be updating—try again later, or contact the school."
+          : msg,
+      );
     } finally {
       setLoading(false);
     }

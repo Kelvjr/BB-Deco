@@ -1,3 +1,6 @@
+const dns = require("dns");
+dns.setDefaultResultOrder("ipv4first");
+
 const express = require("express");
 const cors = require("cors");
 require("dotenv").config();
@@ -12,13 +15,27 @@ const pool = new Pool({
   },
 });
 
+const defaultCorsOrigins = [
+  "http://localhost:3000",
+  "http://localhost:3001",
+  "https://bb-deco.vercel.app",
+  "https://bbdecoadmindashboard.vercel.app",
+];
+
+const extraOrigins = (process.env.CORS_ORIGINS || "")
+  .split(",")
+  .map((s) => s.trim())
+  .filter(Boolean);
+
+/** When CORS_ORIGINS=*, reflect the request Origin (any site can call the API from a browser). */
+const corsOrigin =
+  process.env.CORS_ORIGINS?.trim() === "*"
+    ? true
+    : [...defaultCorsOrigins, ...extraOrigins];
+
 app.use(
   cors({
-    origin: [
-      "http://localhost:3000",
-      "http://localhost:3001",
-      "https://bb-deco.vercel.app",
-    ],
+    origin: corsOrigin,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type"],
   })
