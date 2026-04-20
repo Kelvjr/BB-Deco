@@ -1,17 +1,36 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ApplicationStatusActions } from "@/components/application-status-actions";
-import { fetchApplicationByIdCached } from "@/lib/api";
+import { ApplicationDecisionPanel } from "@/components/application-decision-panel";
+import { StatusBadge } from "@/components/ui/status-badge";
+import {
+  fetchApplicationByIdCached,
+  formatStatusLabel,
+  normalizeApplicationStatus,
+} from "@/lib/api";
 
 export const dynamic = "force-dynamic";
 
-function display(
-  value: string | number | null | undefined,
-  empty = "—",
-): string {
+function display(value: unknown, empty = "—"): string {
   if (value == null) return empty;
   const s = String(value).trim();
   return s === "" ? empty : s;
+}
+
+function Section({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="rounded-[var(--radius)] border border-[var(--border)] bg-[var(--card)] p-6 shadow-[var(--card-shadow)]">
+      <h2 className="text-sm font-semibold uppercase tracking-wide text-[var(--muted-foreground)]">
+        {title}
+      </h2>
+      <div className="mt-4">{children}</div>
+    </section>
+  );
 }
 
 export default async function ApplicationDetailPage({
@@ -25,22 +44,17 @@ export default async function ApplicationDetailPage({
   if (!result.ok) {
     if (result.status === 404) notFound();
     return (
-      <>
-        <header className="flex h-14 shrink-0 items-center border-b border-black/10 bg-white px-4 md:px-6">
-          <h1 className="text-base font-semibold text-gray-900">Application</h1>
-        </header>
-        <main className="flex-1 bg-white p-4 md:p-6">
-          <p className="text-sm text-red-700">{result.error}</p>
-          <p className="mt-3 text-sm">
-            <Link
-              href="/applications/all"
-              className="font-medium text-emerald-800 underline"
-            >
-              Back to all applications
-            </Link>
-          </p>
-        </main>
-      </>
+      <div className="mx-auto max-w-2xl px-4 py-10 md:px-8">
+        <p className="text-sm text-red-600">{result.error}</p>
+        <p className="mt-4 text-sm">
+          <Link
+            href="/applications/all"
+            className="font-medium text-[var(--bb-primary)] underline"
+          >
+            Back to all applications
+          </Link>
+        </p>
+      </div>
     );
   }
 
@@ -48,70 +62,195 @@ export default async function ApplicationDetailPage({
   const applicationIdStr = String(row.id ?? id ?? "").trim();
   if (!applicationIdStr) notFound();
 
-  const statusStr =
-    typeof row.status === "string" && row.status.trim()
-      ? row.status.trim().toLowerCase()
-      : "pending";
+  const statusStr = normalizeApplicationStatus(row.status);
+  const statusLabel = formatStatusLabel(row.status);
 
-  const fields: { label: string; value: string }[] = [
-    { label: "Full name", value: display(row.full_name) },
-    { label: "Email", value: display(row.email) },
-    { label: "Phone", value: display(row.phone) },
-    { label: "Address", value: display(row.address) },
-    { label: "Gender", value: display(row.gender) },
-    { label: "Date of birth", value: display(row.date_of_birth) },
-    { label: "Program applied", value: display(row.program_applied) },
-    { label: "Education level", value: display(row.education_level) },
-    { label: "Guardian name", value: display(row.guardian_name) },
-    { label: "Guardian phone", value: display(row.guardian_phone) },
-    { label: "Notes", value: display(row.notes) },
-    { label: "Submitted", value: display(row.created_at) },
-  ];
+  const photo =
+    typeof row.identity_photo === "string" && row.identity_photo.startsWith("data:")
+      ? row.identity_photo
+      : null;
 
   return (
-    <>
-      <header className="flex h-14 shrink-0 flex-wrap items-center justify-between gap-2 border-b border-black/10 bg-white px-4 md:px-6">
+    <div className="mx-auto max-w-4xl px-4 pb-10 pt-6 md:px-8 md:pb-12 md:pt-8">
+      <nav className="text-sm text-[var(--muted-foreground)]">
+        <Link
+          href="/applications/all"
+          className="font-medium text-[var(--bb-primary)] hover:underline"
+        >
+          Applications
+        </Link>
+        <span className="mx-2 text-[var(--border)]">/</span>
+        <span className="text-[var(--foreground)]">#{row.id}</span>
+      </nav>
+
+      <div className="mt-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <p className="text-[11px] text-gray-500">
-            <Link
-              href="/applications/all"
-              className="font-medium text-emerald-800 hover:underline"
-            >
-              All applications
-            </Link>
-            <span className="mx-1.5 text-gray-400">/</span>
-            <span>#{row.id}</span>
-          </p>
-          <h1 className="text-base font-semibold text-gray-900 md:text-lg">
+          <h2 className="text-2xl font-semibold tracking-tight text-[var(--foreground)] md:text-3xl">
             {display(row.full_name, "Application")}
-          </h1>
+          </h2>
+          <p className="mt-1 text-sm text-[var(--muted-foreground)]">
+            Submitted {display(row.created_at)}
+          </p>
         </div>
-      </header>
+        <StatusBadge statusKey={statusStr} label={statusLabel} />
+      </div>
 
-      <main className="flex-1 bg-white p-4 md:p-6">
-        <div className="mx-auto max-w-2xl space-y-5">
-          <ApplicationStatusActions
-            applicationId={applicationIdStr}
-            initialStatus={statusStr}
-          />
-
-          <section className="rounded-2xl border border-black/10 bg-white p-4 shadow-sm">
-            <h2 className="text-sm font-semibold text-gray-900">Details</h2>
-            <dl className="mt-3 divide-y divide-black/10">
-              {fields.map(({ label, value }) => (
-                <div key={label} className="grid gap-0.5 py-2.5 first:pt-0">
-                  <dt className="text-[10px] font-semibold uppercase tracking-wide text-gray-500">
-                    {label}
-                  </dt>
-                  <dd className="whitespace-pre-wrap text-sm text-gray-900">
-                    {value}
-                  </dd>
-                </div>
-              ))}
+      <div className="mt-8 grid gap-6 lg:grid-cols-3">
+        <div className="order-2 space-y-6 lg:order-1 lg:col-span-2">
+          <Section title="Personal information">
+            <dl className="grid gap-4 sm:grid-cols-2">
+              <div>
+                <dt className="text-xs font-medium text-[var(--muted-foreground)]">
+                  Full name
+                </dt>
+                <dd className="mt-1 text-sm text-[var(--foreground)]">
+                  {display(row.full_name)}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-xs font-medium text-[var(--muted-foreground)]">
+                  Gender
+                </dt>
+                <dd className="mt-1 text-sm text-[var(--foreground)]">
+                  {display(row.gender)}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-xs font-medium text-[var(--muted-foreground)]">
+                  Date of birth
+                </dt>
+                <dd className="mt-1 text-sm text-[var(--foreground)]">
+                  {display(row.date_of_birth)}
+                </dd>
+              </div>
             </dl>
-          </section>
+          </Section>
+
+          <Section title="Contact">
+            <dl className="grid gap-4 sm:grid-cols-2">
+              <div>
+                <dt className="text-xs font-medium text-[var(--muted-foreground)]">
+                  Email
+                </dt>
+                <dd className="mt-1 text-sm text-[var(--foreground)]">
+                  {display(row.email)}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-xs font-medium text-[var(--muted-foreground)]">
+                  Phone
+                </dt>
+                <dd className="mt-1 text-sm text-[var(--foreground)]">
+                  {display(row.phone)}
+                </dd>
+              </div>
+              <div className="sm:col-span-2">
+                <dt className="text-xs font-medium text-[var(--muted-foreground)]">
+                  Address
+                </dt>
+                <dd className="mt-1 whitespace-pre-wrap text-sm text-[var(--foreground)]">
+                  {display(row.address)}
+                </dd>
+              </div>
+            </dl>
+          </Section>
+
+          <Section title="Education">
+            <dl className="grid gap-4 sm:grid-cols-2">
+              <div>
+                <dt className="text-xs font-medium text-[var(--muted-foreground)]">
+                  Program applied for
+                </dt>
+                <dd className="mt-1 text-sm text-[var(--foreground)]">
+                  {display(row.program_applied)}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-xs font-medium text-[var(--muted-foreground)]">
+                  Education level
+                </dt>
+                <dd className="mt-1 text-sm text-[var(--foreground)]">
+                  {display(row.education_level)}
+                </dd>
+              </div>
+              <div className="sm:col-span-2">
+                <dt className="text-xs font-medium text-[var(--muted-foreground)]">
+                  Institution
+                </dt>
+                <dd className="mt-1 text-sm text-[var(--foreground)]">
+                  {display(row.institution)}
+                </dd>
+              </div>
+            </dl>
+          </Section>
+
+          <Section title="Guardian / emergency contact">
+            <dl className="grid gap-4 sm:grid-cols-2">
+              <div>
+                <dt className="text-xs font-medium text-[var(--muted-foreground)]">
+                  Name
+                </dt>
+                <dd className="mt-1 text-sm text-[var(--foreground)]">
+                  {display(row.guardian_name)}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-xs font-medium text-[var(--muted-foreground)]">
+                  Phone
+                </dt>
+                <dd className="mt-1 text-sm text-[var(--foreground)]">
+                  {display(row.guardian_phone)}
+                </dd>
+              </div>
+            </dl>
+          </Section>
+
+          {row.notes ? (
+            <Section title="Notes">
+              <p className="whitespace-pre-wrap text-sm leading-relaxed text-[var(--foreground)]">
+                {display(row.notes, "")}
+              </p>
+            </Section>
+          ) : null}
         </div>
-      </main>
-    </>
+
+        <div className="order-1 space-y-6 lg:order-2 lg:col-span-1">
+          <div className="lg:sticky lg:top-24">
+            <div className="rounded-[var(--radius)] border border-[var(--border)] bg-[var(--card)] p-5 shadow-[var(--card-shadow)]">
+              <h2 className="text-sm font-semibold text-[var(--foreground)]">
+                Decision
+              </h2>
+              <p className="mt-1 text-xs text-[var(--muted-foreground)]">
+                Approve or reject this application. You can fine-tune status
+                below if needed.
+              </p>
+              <div className="mt-5">
+                <ApplicationDecisionPanel
+                  applicationId={applicationIdStr}
+                  initialStatus={statusStr}
+                />
+              </div>
+            </div>
+
+            {photo ? (
+              <div className="mt-6 rounded-[var(--radius)] border border-[var(--border)] bg-[var(--card)] p-4 shadow-[var(--card-shadow)]">
+                <h2 className="text-sm font-semibold text-[var(--foreground)]">
+                  Identity photo
+                </h2>
+                <div className="relative mt-3 aspect-square w-full max-w-xs overflow-hidden rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--muted)]">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={photo}
+                    alt="Applicant portrait"
+                    className="size-full object-cover"
+                  />
+                </div>
+              </div>
+            ) : null}
+          </div>
+        </div>
+      </div>
+
+    </div>
   );
 }

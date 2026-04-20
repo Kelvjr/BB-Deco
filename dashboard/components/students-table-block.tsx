@@ -1,3 +1,4 @@
+import { Users } from "lucide-react";
 import {
   fetchStudentsCached,
   studentTableRows,
@@ -10,24 +11,22 @@ function StudentsTableBody({ rows }: { rows: StudentTableRowView[] }) {
       {rows.map((r) => (
         <tr
           key={r.key}
-          className="border-t border-black/10 hover:bg-emerald-50/40"
+          className="border-t border-[var(--border)] transition-colors hover:bg-[rgba(8,151,53,0.06)] dark:hover:bg-[rgba(8,151,53,0.1)]"
         >
-          <td className="px-3 py-2 text-xs font-medium text-gray-900 md:px-4 md:py-3 md:text-sm">
+          <td className="px-4 py-3 text-sm font-semibold text-[var(--foreground)]">
             {r.studentId}
           </td>
-          <td className="px-3 py-2 text-xs text-gray-900 md:px-4 md:py-3 md:text-sm">
-            {r.name}
-          </td>
-          <td className="px-3 py-2 text-xs text-gray-500 md:px-4 md:py-3 md:text-sm">
+          <td className="px-4 py-3 text-sm text-[var(--foreground)]">{r.name}</td>
+          <td className="max-w-[12rem] truncate px-4 py-3 text-sm text-[var(--muted-foreground)]">
             {r.email}
           </td>
-          <td className="px-3 py-2 text-xs text-gray-900 md:px-4 md:py-3 md:text-sm">
+          <td className="max-w-[10rem] truncate px-4 py-3 text-sm text-[var(--foreground)]">
             {r.program}
           </td>
-          <td className="px-3 py-2 text-xs text-gray-500 md:px-4 md:py-3 md:text-sm">
+          <td className="px-4 py-3 text-sm text-[var(--muted-foreground)]">
             {r.phone}
           </td>
-          <td className="px-3 py-2 text-xs text-gray-500 md:px-4 md:py-3 md:text-sm">
+          <td className="whitespace-nowrap px-4 py-3 text-sm text-[var(--muted-foreground)]">
             {r.joinedAt}
           </td>
         </tr>
@@ -52,43 +51,43 @@ export async function StudentsTableBlock({
     <div className="space-y-4">
       {loadError ? (
         <div
-          className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950"
+          className="rounded-[var(--radius)] border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-100"
           role="alert"
         >
           <p className="font-medium">Could not load students</p>
-          <p className="mt-1 text-amber-900/90">{loadError}</p>
+          <p className="mt-1 text-amber-900/90 dark:text-amber-200/90">
+            {loadError}
+          </p>
         </div>
       ) : null}
 
-      <section className="rounded-2xl border border-black/10 bg-white p-4 shadow-sm md:p-5">
+      <section className="rounded-[var(--radius)] border border-[var(--border)] bg-[var(--card)] p-5 shadow-[var(--card-shadow)]">
         <div>
-          <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
-          <p className="text-xs text-gray-500">{description}</p>
+          <h2 className="text-lg font-semibold tracking-tight text-[var(--foreground)]">
+            {title}
+          </h2>
+          <p className="mt-1 text-sm text-[var(--muted-foreground)]">
+            {description}
+          </p>
         </div>
 
-        <div className="mt-4 overflow-x-auto overflow-y-hidden rounded-xl border border-black/10">
+        <div className="mt-5 overflow-x-auto rounded-[var(--radius-sm)] border border-[var(--border)]">
           <table className="w-full min-w-[42rem] text-left">
-            <thead className="bg-gray-50 text-xs text-gray-700 md:text-sm">
+            <thead className="bg-[var(--muted)]/80 text-xs font-semibold uppercase tracking-wide text-[var(--muted-foreground)]">
               <tr>
-                <th className="px-3 py-2 font-medium md:px-4 md:py-3">
-                  Student ID
-                </th>
-                <th className="px-3 py-2 font-medium md:px-4 md:py-3">Name</th>
-                <th className="px-3 py-2 font-medium md:px-4 md:py-3">Email</th>
-                <th className="px-3 py-2 font-medium md:px-4 md:py-3">
-                  Program
-                </th>
-                <th className="px-3 py-2 font-medium md:px-4 md:py-3">Phone</th>
-                <th className="px-3 py-2 font-medium md:px-4 md:py-3">
-                  Record created
-                </th>
+                <th className="px-4 py-3">Student ID</th>
+                <th className="px-4 py-3">Name</th>
+                <th className="px-4 py-3">Email</th>
+                <th className="px-4 py-3">Program</th>
+                <th className="px-4 py-3">Phone</th>
+                <th className="px-4 py-3">Date admitted</th>
               </tr>
             </thead>
             {loadError ? (
               <tbody>
-                <tr className="border-t border-black/10">
+                <tr className="border-t border-[var(--border)]">
                   <td
-                    className="px-3 py-3 text-xs text-gray-500 md:px-4 md:text-sm"
+                    className="px-4 py-8 text-sm text-[var(--muted-foreground)]"
                     colSpan={6}
                   >
                     Fix the configuration above, then refresh this page.
@@ -97,13 +96,20 @@ export async function StudentsTableBlock({
               </tbody>
             ) : rows.length === 0 ? (
               <tbody>
-                <tr className="border-t border-black/10">
-                  <td
-                    className="px-3 py-3 text-xs text-gray-500 md:px-4 md:text-sm"
-                    colSpan={6}
-                  >
-                    No students yet. Approve an application to create a student
-                    profile.
+                <tr className="border-t border-[var(--border)]">
+                  <td colSpan={6} className="px-4 py-16 text-center">
+                    <div className="mx-auto flex max-w-sm flex-col items-center">
+                      <div className="flex size-14 items-center justify-center rounded-full bg-[var(--muted)] text-[var(--muted-foreground)]">
+                        <Users className="size-7" strokeWidth={1.5} />
+                      </div>
+                      <p className="mt-4 text-base font-medium text-[var(--foreground)]">
+                        No students yet
+                      </p>
+                      <p className="mt-2 text-sm text-[var(--muted-foreground)]">
+                        Approve an application to create a student profile with a
+                        BB student ID.
+                      </p>
+                    </div>
                   </td>
                 </tr>
               </tbody>

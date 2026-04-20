@@ -1,5 +1,7 @@
 require("dotenv").config();
 
+const { sendApplicationReceivedEmail } = require("./lib/email-application-received");
+
 const dns = require("dns");
 dns.setDefaultResultOrder("ipv4first");
 
@@ -291,6 +293,23 @@ async function main() {
       );
 
       const created = rowForJson(result.rows[0]);
+
+      try {
+        const mail = await sendApplicationReceivedEmail({
+          to: created.email,
+          fullName: created.full_name,
+          programApplied: created.program_applied,
+        });
+        if (mail && !mail.sent && !mail.skipped) {
+          console.error("[email] Receipt email failed after save:", mail.error);
+        }
+      } catch (mailErr) {
+        console.error(
+          "[email] Receipt email threw after save:",
+          mailErr?.message || mailErr,
+        );
+      }
+
       res.status(201).json({
         ...created,
         links: {

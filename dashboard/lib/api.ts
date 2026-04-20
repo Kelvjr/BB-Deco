@@ -25,7 +25,13 @@ export function resolveApiBase(): string | null {
   return getBackendBaseUrl();
 }
 
-function formatStatusLabel(value: unknown): string {
+/** Normalized status for filters and badges: pending | submitted | approved | rejected | … */
+export function normalizeApplicationStatus(value: unknown): string {
+  if (typeof value !== "string" || !value.trim()) return "pending";
+  return value.trim().toLowerCase();
+}
+
+export function formatStatusLabel(value: unknown): string {
   if (typeof value !== "string" || !value.trim()) return "Pending review";
   const s = value.trim().toLowerCase();
   const labels: Record<string, string> = {
@@ -179,8 +185,10 @@ export function applicationTableRows(rows: ApplicationRow[]) {
       key: linkId ?? `${row.email ?? "row"}-${index}`,
       applicant: row.full_name?.trim() || "—",
       email: row.email?.trim() || "—",
+      phone: row.phone?.trim() || "—",
       program: row.program_applied?.trim() || "—",
       status: formatStatusLabel(row.status),
+      statusKey: normalizeApplicationStatus(row.status),
       submittedAt: formatSubmittedAt(row),
     };
   });

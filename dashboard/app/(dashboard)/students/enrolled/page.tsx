@@ -5,10 +5,7 @@ export const dynamic = "force-dynamic";
 
 export default function StudentsEnrolledPage() {
   return (
-    <WorkspaceShell
-      title="Enrolled students"
-      subtitle="Same directory as “All students” for now; later we can split by enrollment status."
-    >
+    <WorkspaceShell subtitle="Active learners (same directory as all students for now).">
       <StudentsTableBlock
         title="Active learners"
         description="Profiles created when applications are approved. Uses GET /students."

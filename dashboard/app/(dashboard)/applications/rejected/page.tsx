@@ -5,10 +5,7 @@ export const dynamic = "force-dynamic";
 
 export default function ApplicationsRejectedPage() {
   return (
-    <WorkspaceShell
-      title="Rejected applications"
-      subtitle="Filtered with GET /applications?status=rejected"
-    >
+    <WorkspaceShell subtitle="Applications not admitted.">
       <ApplicationsTableBlock
         title="Rejected"
         description="Applications not admitted."

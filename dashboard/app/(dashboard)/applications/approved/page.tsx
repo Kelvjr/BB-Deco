@@ -5,10 +5,7 @@ export const dynamic = "force-dynamic";
 
 export default function ApplicationsApprovedPage() {
   return (
-    <WorkspaceShell
-      title="Approved applications"
-      subtitle="Filtered with GET /applications?status=approved"
-    >
+    <WorkspaceShell subtitle="Applications marked approved.">
       <ApplicationsTableBlock
         title="Approved"
         description="Applications marked approved in the database."

@@ -1,8 +1,32 @@
 @import "tailwindcss";
 
+/* BB Deco — premium admissions dashboard tokens */
 :root {
+  --bb-primary: #089735;
+  --bb-primary-hover: #067d2d;
+  --bb-accent: #f59e0b;
+  --bb-accent-soft: rgba(245, 158, 11, 0.12);
   --background: #ffffff;
-  --foreground: #111827;
+  --foreground: #0f172a;
+  --muted: #f8fafc;
+  --page-bg: #f1f5f9;
+  --border: rgba(15, 23, 42, 0.08);
+  --muted-foreground: #64748b;
+  --card: #ffffff;
+  --card-shadow: 0 1px 3px rgba(15, 23, 42, 0.06), 0 4px 12px rgba(15, 23, 42, 0.04);
+  --radius: 14px;
+  --radius-sm: 10px;
+}
+
+.dark {
+  --background: #0f172a;
+  --foreground: #f8fafc;
+  --muted: #1e293b;
+  --page-bg: #020617;
+  --border: rgba(248, 250, 252, 0.08);
+  --muted-foreground: #94a3b8;
+  --card: #0f172a;
+  --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.3), 0 4px 20px rgba(0, 0, 0, 0.25);
 }
 
 @theme inline {
@@ -12,7 +36,16 @@
 }
 
 body {
-  background: #ffffff;
+  background: var(--page-bg);
   color: var(--foreground);
   font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+}
+
+.dark body {
+  background: var(--page-bg);
+}
+
+/* Smooth transitions for theme toggle */
+html {
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
