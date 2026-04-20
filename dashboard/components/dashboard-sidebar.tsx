@@ -14,6 +14,7 @@ import {
   ChevronRight,
   ClipboardList,
   FolderOpen,
+  GraduationCap,
   LayoutDashboard,
   ScrollText,
   Settings,
@@ -66,7 +67,7 @@ function NavMain({
       onClick={onNavigate}
       className={`group flex w-full items-center justify-between gap-2 rounded-[var(--radius-sm)] px-2.5 py-2 text-[13px] font-medium transition-all ${
         active
-          ? "bg-[rgba(8,151,53,0.1)] text-[var(--bb-primary)] shadow-sm dark:bg-[rgba(8,151,53,0.15)]"
+          ? "bg-[rgba(8,151,53,0.1)] text-[var(--bb-primary)] shadow-sm"
           : "text-[var(--foreground)] hover:bg-[var(--muted)]"
       }`}
     >
@@ -137,7 +138,7 @@ function NavLeaf({
       onClick={onNavigate}
       className={`group flex w-full items-center gap-2.5 rounded-[var(--radius-sm)] px-2.5 py-2 text-[13px] font-medium transition-all ${
         active
-          ? "bg-[rgba(8,151,53,0.1)] text-[var(--bb-primary)] dark:bg-[rgba(8,151,53,0.15)]"
+          ? "bg-[rgba(8,151,53,0.1)] text-[var(--bb-primary)]"
           : "text-[var(--foreground)] hover:bg-[var(--muted)]"
       }`}
     >
@@ -200,35 +201,35 @@ export function DashboardSidebar({
 
   return (
     <aside
-      className={`flex h-full ${w} shrink-0 flex-col border-r border-[var(--border)] bg-[var(--background)] shadow-[var(--card-shadow)] transition-[width] duration-200 ease-out`}
+      className={`flex h-full ${w} shrink-0 flex-col border-r border-slate-200 bg-white shadow-[var(--card-shadow)] transition-[width] duration-200 ease-out`}
     >
-      <div
-        className={`flex shrink-0 items-center border-b border-[var(--border)] ${collapsed ? "justify-center px-2 py-3" : "px-3 py-4"}`}
-      >
+      <div className="flex h-14 shrink-0 items-stretch border-b border-slate-200 bg-white md:h-[3.75rem]">
         <Link
           href="/"
           onClick={onNavigate}
-          className="flex min-w-0 flex-1 flex-col items-center justify-center transition-opacity hover:opacity-90"
+          className={`flex min-w-0 flex-1 items-center gap-2.5 transition-opacity hover:opacity-90 ${collapsed ? "justify-center px-2" : "px-3"}`}
         >
+          <Image
+            src="/logo.svg"
+            alt=""
+            width={32}
+            height={32}
+            className="h-8 w-auto shrink-0 object-contain"
+            priority
+          />
           {!collapsed ? (
-            <Image
-              src="/logo.svg"
-              alt="BB Deco & Catering Training Centre"
-              width={320}
-              height={120}
-              className="mx-auto h-14 w-full max-w-[12rem] object-contain object-center"
-              priority
-            />
-          ) : (
-            <Image
-              src="/logo.svg"
-              alt=""
-              width={40}
-              height={40}
-              className="size-10 object-contain"
-              priority
-            />
-          )}
+            <>
+              <span className="min-w-0 truncate text-[15px] font-semibold tracking-tight text-slate-900">
+                BB Deco
+              </span>
+              <span
+                className="ml-auto flex size-8 shrink-0 items-center justify-center rounded-[var(--radius-sm)] bg-[rgba(8,151,53,0.1)] text-[var(--bb-primary)]"
+                aria-hidden
+              >
+                <GraduationCap className="size-[18px]" strokeWidth={1.75} />
+              </span>
+            </>
+          ) : null}
           <span className="sr-only">BB Deco — home</span>
         </Link>
       </div>

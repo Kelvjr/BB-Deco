@@ -13,6 +13,7 @@ export async function ApplicationsTableBlock({
   limit,
   defaultFilter,
   mode = "full",
+  initialSearch = "",
 }: {
   title?: string;
   description?: string;
@@ -22,6 +23,8 @@ export async function ApplicationsTableBlock({
   limit?: number;
   defaultFilter?: DefaultFilter;
   mode?: "full" | "compact";
+  /** Prefill search from URL `?q=` (applications list). */
+  initialSearch?: string;
 }) {
   const result = await fetchApplicationsCached(statusFilter);
   const applications = result.ok ? result.data : [];
@@ -49,6 +52,7 @@ export async function ApplicationsTableBlock({
       description={description}
       defaultFilter={df}
       mode={effectiveMode}
+      initialSearch={initialSearch}
     />
   );
 }

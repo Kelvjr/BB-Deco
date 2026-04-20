@@ -17,6 +17,8 @@ export type ApplicationRow = {
   notes?: string | null;
   status?: string | null;
   created_at?: string | null;
+  submitted_at?: string | null;
+  inserted_at?: string | null;
   links?: { self?: string; collection?: string };
   [key: string]: unknown;
 };
@@ -180,6 +182,11 @@ export function applicationLinkId(row: ApplicationRow): string | undefined {
 export function applicationTableRows(rows: ApplicationRow[]) {
   return rows.map((row, index) => {
     const linkId = applicationLinkId(row);
+    const rawCreated =
+      (typeof row.created_at === "string" && row.created_at) ||
+      (typeof row.submitted_at === "string" && row.submitted_at) ||
+      (typeof row.inserted_at === "string" && row.inserted_at) ||
+      "";
     return {
       linkId,
       key: linkId ?? `${row.email ?? "row"}-${index}`,
@@ -190,6 +197,7 @@ export function applicationTableRows(rows: ApplicationRow[]) {
       status: formatStatusLabel(row.status),
       statusKey: normalizeApplicationStatus(row.status),
       submittedAt: formatSubmittedAt(row),
+      submittedAtIso: rawCreated,
     };
   });
 }

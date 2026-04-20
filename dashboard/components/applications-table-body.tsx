@@ -14,6 +14,8 @@ export type ApplicationTableRowView = {
   status: string;
   statusKey: string;
   submittedAt: string;
+  /** ISO-ish timestamp when available (for sorting / date-only display). */
+  submittedAtIso?: string;
 };
 
 export function ApplicationsTableBody({
@@ -47,7 +49,7 @@ export function ApplicationsTableBody({
             aria-label={href ? `View application ${r.applicant}` : undefined}
             className={`group border-t border-[var(--border)] transition-colors ${
               href
-                ? "cursor-pointer hover:bg-[rgba(8,151,53,0.06)] focus-visible:bg-[rgba(8,151,53,0.08)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--bb-primary)] dark:hover:bg-[rgba(8,151,53,0.1)]"
+                ? "cursor-pointer hover:bg-[rgba(8,151,53,0.06)] focus-visible:bg-[rgba(8,151,53,0.08)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--bb-primary)]"
                 : ""
             }`}
           >

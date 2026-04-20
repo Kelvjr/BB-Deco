@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Inbox, Search } from "lucide-react";
 import { ApplicationsTableBody } from "@/components/applications-table-body";
 import type { ApplicationTableRowView } from "@/components/applications-table-body";
@@ -14,6 +14,7 @@ export function ApplicationsListPanel({
   description,
   defaultFilter = "all",
   mode = "full",
+  initialSearch = "",
 }: {
   rows: ApplicationTableRowView[];
   loadError: string | null;
@@ -22,9 +23,14 @@ export function ApplicationsListPanel({
   defaultFilter?: FilterKey;
   /** Compact = no search/filters (e.g. dashboard “recent”). */
   mode?: "full" | "compact";
+  initialSearch?: string;
 }) {
-  const [q, setQ] = useState("");
+  const [q, setQ] = useState(initialSearch);
   const [filter, setFilter] = useState<FilterKey>(defaultFilter);
+
+  useEffect(() => {
+    setQ(initialSearch);
+  }, [initialSearch]);
 
   const filtered = useMemo(() => {
     if (mode === "compact") return rows;
@@ -48,13 +54,11 @@ export function ApplicationsListPanel({
     <div className="space-y-4">
       {loadError ? (
         <div
-          className="rounded-[var(--radius)] border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-100"
+          className="rounded-[var(--radius)] border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950"
           role="alert"
         >
           <p className="font-medium">Could not load applications</p>
-          <p className="mt-1 text-amber-900/90 dark:text-amber-200/90">
-            {loadError}
-          </p>
+          <p className="mt-1 text-amber-900/90">{loadError}</p>
         </div>
       ) : null}
 

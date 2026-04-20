@@ -2,9 +2,9 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { Bell, Moon, PanelLeft, Sun } from "lucide-react";
-import { useTheme } from "@/components/theme-provider";
+import { usePathname, useRouter } from "next/navigation";
+import { useCallback, useState } from "react";
+import { Bell, PanelLeft, Search } from "lucide-react";
 
 function titleForPath(pathname: string): string {
   if (pathname === "/") return "Dashboard";
@@ -41,56 +41,77 @@ export function DashboardTopBar({
   onMenuClick?: () => void;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
   const title = titleForPath(pathname);
-  const { theme, toggle } = useTheme();
+  const [searchQ, setSearchQ] = useState("");
+
+  const onSearchSubmit = useCallback(
+    (e: React.FormEvent) => {
+      e.preventDefault();
+      const q = searchQ.trim();
+      if (q) {
+        router.push(`/applications/all?q=${encodeURIComponent(q)}`);
+      } else {
+        router.push("/applications/all");
+      }
+    },
+    [router, searchQ],
+  );
 
   return (
-    <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center justify-between gap-4 border-b border-[var(--border)] bg-[var(--background)]/80 px-4 backdrop-blur-md md:h-[3.75rem] md:px-8">
+    <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center justify-between gap-4 border-b border-slate-200/80 bg-white px-4 md:h-[3.75rem] md:px-8">
       <div className="flex min-w-0 items-center gap-3">
         <button
           type="button"
           onClick={onMenuClick}
-          className="flex size-9 shrink-0 items-center justify-center rounded-[var(--radius-sm)] text-[var(--muted-foreground)] transition-colors hover:bg-[var(--muted)] md:hidden"
+          className="flex size-9 shrink-0 items-center justify-center rounded-[var(--radius-sm)] text-slate-500 transition-colors hover:bg-slate-100 md:hidden"
           aria-label="Open menu"
         >
           <PanelLeft className="size-5" strokeWidth={1.75} />
         </button>
-        <div className="min-w-0">
-          <h1 className="truncate text-lg font-semibold tracking-tight text-[var(--foreground)] md:text-xl">
-            {title}
-          </h1>
-          <p className="hidden text-xs text-[var(--muted-foreground)] sm:block">
-            BB Deco Admissions
-          </p>
-        </div>
+        <h1 className="truncate text-lg font-semibold tracking-tight text-slate-900 md:text-xl">
+          {title}
+        </h1>
       </div>
 
-      <div className="flex shrink-0 items-center gap-1 md:gap-2">
+      <div className="flex min-w-0 shrink-0 items-center gap-2 md:gap-3">
+        <form
+          onSubmit={onSearchSubmit}
+          className="min-w-0 flex-1 max-w-[11rem] sm:max-w-xs md:max-w-sm"
+        >
+          <div className="relative">
+            <Search
+              className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400"
+              strokeWidth={1.75}
+            />
+            <input
+              type="search"
+              name="q"
+              placeholder="Search applications"
+              value={searchQ}
+              onChange={(e) => setSearchQ(e.target.value)}
+              className="w-full rounded-[var(--radius-sm)] border border-slate-200 bg-white py-2 pl-10 pr-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-[var(--bb-primary)] focus:outline-none focus:ring-2 focus:ring-[rgba(8,151,53,0.2)]"
+              aria-label="Search applications"
+            />
+          </div>
+        </form>
+
+        <div className="h-8 w-px shrink-0 bg-slate-200" aria-hidden />
+
         <button
           type="button"
-          className="relative flex size-9 items-center justify-center rounded-[var(--radius-sm)] text-[var(--muted-foreground)] transition-colors hover:bg-[var(--muted)]"
+          className="relative flex size-9 shrink-0 items-center justify-center rounded-[var(--radius-sm)] text-slate-500 transition-colors hover:bg-slate-100"
           aria-label="Notifications"
         >
           <Bell className="size-[18px]" strokeWidth={1.75} />
-          <span className="absolute right-1.5 top-1.5 size-2 rounded-full bg-[var(--bb-accent)] ring-2 ring-[var(--background)]" />
+          <span className="absolute right-1.5 top-1.5 size-2 rounded-full bg-[var(--bb-accent)] ring-2 ring-white" />
         </button>
-        <button
-          type="button"
-          onClick={toggle}
-          className="flex size-9 items-center justify-center rounded-[var(--radius-sm)] text-[var(--muted-foreground)] transition-colors hover:bg-[var(--muted)]"
-          aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
-        >
-          {theme === "dark" ? (
-            <Sun className="size-[18px]" strokeWidth={1.75} />
-          ) : (
-            <Moon className="size-[18px]" strokeWidth={1.75} />
-          )}
-        </button>
+
         <Link
           href="/settings"
-          className="flex items-center gap-2 rounded-[var(--radius-sm)] py-1 pl-1 pr-2 transition-colors hover:bg-[var(--muted)]"
+          className="flex min-w-0 shrink-0 items-center gap-2 rounded-[var(--radius-sm)] py-1 pl-1 pr-2 transition-colors hover:bg-slate-100"
         >
-          <span className="relative flex size-9 items-center justify-center overflow-hidden rounded-full border border-[var(--border)] bg-[var(--muted)]">
+          <span className="relative flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-full border border-slate-200 bg-slate-100">
             <Image
               src="/logo.svg"
               alt=""
@@ -99,12 +120,12 @@ export function DashboardTopBar({
               className="size-8 object-contain p-1"
             />
           </span>
-          <span className="hidden text-left text-xs leading-tight md:block">
-            <span className="block font-medium text-[var(--foreground)]">
+          <span className="hidden min-w-0 text-left md:block">
+            <span className="block truncate text-sm font-semibold leading-tight text-slate-900">
               Admin
             </span>
-            <span className="text-[10px] text-[var(--muted-foreground)]">
-              Staff
+            <span className="block text-[11px] leading-tight text-slate-500">
+              admin
             </span>
           </span>
         </Link>
