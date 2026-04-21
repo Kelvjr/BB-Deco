@@ -1,5 +1,5 @@
-import { ApplyWizard } from "@/components/apply/apply-wizard";
+import { redirect } from "next/navigation";
 
 export default function ApplyPage() {
-  return <ApplyWizard />;
+  redirect("/");
 }
