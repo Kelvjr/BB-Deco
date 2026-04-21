@@ -11,7 +11,7 @@ export function SignupForm() {
   const router = useRouter();
   const clerk = useClerk();
   const { signUp } = useSignUp();
-  const [firstName, setFirstName] = useState("");
+  const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -29,10 +29,10 @@ export function SignupForm() {
     setFormError(null);
     if (!clerk.loaded || !signUp) return;
 
-    const first = firstName.trim();
+    const full = fullName.trim();
     const em = email.trim().toLowerCase();
-    if (!first) {
-      setFormError("First name is required.");
+    if (!full) {
+      setFormError("Full name is required.");
       return;
     }
     if (!isAllowedAdminEmail(em)) {
@@ -48,10 +48,15 @@ export function SignupForm() {
       return;
     }
 
+    const [firstNameToken, ...lastNameParts] = full.split(/\s+/);
+    const firstName = firstNameToken ?? "";
+    const lastName = lastNameParts.join(" ").trim() || undefined;
+
     setSubmitting(true);
     try {
       const { error: createErr } = await signUp.create({
-        firstName: first,
+        firstName,
+        lastName,
         emailAddress: em,
         password,
       });
@@ -190,21 +195,21 @@ export function SignupForm() {
         ) : null}
         <div className="grid gap-2">
           <label
-            htmlFor="first-name"
+            htmlFor="full-name"
             className="text-sm font-medium text-slate-700"
           >
-            First name
+            Full name
           </label>
           <input
-            id="first-name"
-            name="firstName"
+            id="full-name"
+            name="fullName"
             type="text"
-            autoComplete="given-name"
+            autoComplete="name"
             required
-            value={firstName}
-            onChange={(e) => setFirstName(e.target.value)}
+            value={fullName}
+            onChange={(e) => setFullName(e.target.value)}
             className="rounded-[var(--radius-sm)] border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-[var(--bb-primary)] focus:outline-none focus:ring-2 focus:ring-[rgba(8,151,53,0.2)]"
-            placeholder="First name"
+            placeholder="Full name"
           />
         </div>
         <div className="grid gap-2">

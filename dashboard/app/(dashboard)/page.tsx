@@ -4,6 +4,12 @@ import { fetchApplicationsCached, fetchStudentsCached } from "@/lib/api";
 
 export const dynamic = "force-dynamic";
 
+function firstNameFromFullName(fullName?: string | null): string {
+  const cleaned = fullName?.trim();
+  if (!cleaned) return "Admin";
+  return cleaned.split(/\s+/)[0] || "Admin";
+}
+
 export default async function DashboardHomePage() {
   const [appsResult, studentsResult, user] = await Promise.all([
     fetchApplicationsCached(),
@@ -15,9 +21,7 @@ export default async function DashboardHomePage() {
   const students = studentsResult.ok ? studentsResult.data : [];
   const loadError = appsResult.ok ? null : appsResult.error;
 
-  const displayName =
-    user?.firstName?.trim() ||
-    "Admin";
+  const displayName = firstNameFromFullName(user?.fullName);
 
   return (
     <DashboardHomeClient
