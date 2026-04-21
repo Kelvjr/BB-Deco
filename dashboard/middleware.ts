@@ -8,6 +8,11 @@ function isPublicRoute(req: NextRequest): boolean {
   return PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(`${p}/`));
 }
 
+function isApiRoute(req: NextRequest): boolean {
+  const pathname = req.nextUrl.pathname;
+  return pathname.startsWith("/api") || pathname.startsWith("/trpc");
+}
+
 function clerkConfigured(): boolean {
   return Boolean(
     process.env.CLERK_SECRET_KEY?.trim() &&
@@ -45,8 +50,16 @@ export default function middleware(req: NextRequest, ev: NextFetchEvent) {
           return NextResponse.redirect(new URL("/", innerReq.url));
         }
 
-        if (!isPublicRoute(innerReq)) {
-          await auth.protect();
+        if (!userId && !isPublicRoute(innerReq)) {
+          if (isApiRoute(innerReq)) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+          }
+          const loginUrl = new URL("/login", innerReq.url);
+          loginUrl.searchParams.set(
+            "redirect_url",
+            `${innerReq.nextUrl.pathname}${innerReq.nextUrl.search}`,
+          );
+          return NextResponse.redirect(loginUrl);
         }
       })(req, ev);
     } catch (err) {
