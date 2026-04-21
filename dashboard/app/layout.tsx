@@ -12,6 +12,11 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "BB Deco | Admissions Admin",
   description: "BB Deco Catering School admissions dashboard",
+  icons: {
+    icon: "/logo.svg",
+    shortcut: "/logo.svg",
+    apple: "/logo.svg",
+  },
 };
 
 export default function RootLayout({

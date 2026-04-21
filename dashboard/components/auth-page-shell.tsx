@@ -10,21 +10,20 @@ export function AuthPageShell({ children }: { children: ReactNode }) {
   return (
     <div className="grid min-h-svh lg:grid-cols-2">
       <div className="flex flex-col gap-4 bg-white p-6 md:p-10">
-        <div className="flex justify-center gap-2 md:justify-start">
+        <div className="flex justify-center md:justify-start">
           <Link
             href="/"
-            className="flex items-center gap-2 font-semibold text-slate-900"
+            className="flex items-center gap-3 font-semibold text-slate-900"
           >
-            <span className="relative flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-md border border-slate-200 bg-white">
-              <Image
-                src="/logo.svg"
-                alt=""
-                width={36}
-                height={36}
-                className="size-8 object-contain p-0.5"
-              />
-            </span>
-            BB Deco
+            <Image
+              src="/logo.svg"
+              alt="BB Deco logo"
+              width={40}
+              height={40}
+              className="h-10 w-auto shrink-0 object-contain"
+              priority
+            />
+            <span className="text-sm sm:text-base">BB Deco Admin Dashboard</span>
           </Link>
         </div>
         <div className="flex flex-1 items-center justify-center">

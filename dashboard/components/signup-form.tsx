@@ -11,6 +11,7 @@ export function SignupForm() {
   const router = useRouter();
   const clerk = useClerk();
   const { signUp } = useSignUp();
+  const [firstName, setFirstName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -28,7 +29,12 @@ export function SignupForm() {
     setFormError(null);
     if (!clerk.loaded || !signUp) return;
 
+    const first = firstName.trim();
     const em = email.trim().toLowerCase();
+    if (!first) {
+      setFormError("First name is required.");
+      return;
+    }
     if (!isAllowedAdminEmail(em)) {
       setFormError(`Only ${ALLOWED_ADMIN_EMAIL} can create an account.`);
       return;
@@ -45,6 +51,7 @@ export function SignupForm() {
     setSubmitting(true);
     try {
       const { error: createErr } = await signUp.create({
+        firstName: first,
         emailAddress: em,
         password,
       });
@@ -181,6 +188,25 @@ export function SignupForm() {
             {formError}
           </p>
         ) : null}
+        <div className="grid gap-2">
+          <label
+            htmlFor="first-name"
+            className="text-sm font-medium text-slate-700"
+          >
+            First name
+          </label>
+          <input
+            id="first-name"
+            name="firstName"
+            type="text"
+            autoComplete="given-name"
+            required
+            value={firstName}
+            onChange={(e) => setFirstName(e.target.value)}
+            className="rounded-[var(--radius-sm)] border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-[var(--bb-primary)] focus:outline-none focus:ring-2 focus:ring-[rgba(8,151,53,0.2)]"
+            placeholder="First name"
+          />
+        </div>
         <div className="grid gap-2">
           <label htmlFor="email" className="text-sm font-medium text-slate-700">
             Email
