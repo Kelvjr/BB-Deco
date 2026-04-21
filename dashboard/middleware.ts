@@ -1,11 +1,12 @@
-import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import type { NextFetchEvent, NextRequest } from "next/server";
 
-const isPublicRoute = createRouteMatcher([
-  "/login(.*)",
-  "/signup(.*)",
-]);
+const PUBLIC_PATHS = ["/login", "/signup"];
+
+function isPublicRoute(req: NextRequest): boolean {
+  const pathname = req.nextUrl.pathname;
+  return PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(`${p}/`));
+}
 
 function clerkConfigured(): boolean {
   return Boolean(
@@ -25,18 +26,6 @@ function configErrorResponse(): NextResponse {
   });
 }
 
-const clerkMiddlewareHandler = clerkMiddleware(async (auth, req) => {
-  const { userId } = await auth();
-
-  if (userId && isPublicRoute(req)) {
-    return NextResponse.redirect(new URL("/", req.url));
-  }
-
-  if (!isPublicRoute(req)) {
-    await auth.protect();
-  }
-});
-
 /** Do not invoke Clerk when keys are missing — avoids Edge 500 MIDDLEWARE_INVOCATION_FAILED. */
 export default function middleware(req: NextRequest, ev: NextFetchEvent) {
   if (!clerkConfigured()) {
@@ -45,7 +34,29 @@ export default function middleware(req: NextRequest, ev: NextFetchEvent) {
     }
     return configErrorResponse();
   }
-  return clerkMiddlewareHandler(req, ev);
+
+  return (async () => {
+    try {
+      const { clerkMiddleware } = await import("@clerk/nextjs/server");
+      return clerkMiddleware(async (auth, innerReq) => {
+        const { userId } = await auth();
+
+        if (userId && isPublicRoute(innerReq)) {
+          return NextResponse.redirect(new URL("/", innerReq.url));
+        }
+
+        if (!isPublicRoute(innerReq)) {
+          await auth.protect();
+        }
+      })(req, ev);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Unknown middleware error";
+      return new NextResponse(`Middleware failed to initialize: ${msg}`, {
+        status: 503,
+        headers: { "content-type": "text/plain; charset=utf-8" },
+      });
+    }
+  })();
 }
 
 export const config = {
