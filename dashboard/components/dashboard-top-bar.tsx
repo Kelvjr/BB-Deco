@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import { UserButton } from "@clerk/nextjs";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useState } from "react";
@@ -107,28 +107,17 @@ export function DashboardTopBar({
           <span className="absolute right-1.5 top-1.5 size-2 rounded-full bg-[var(--bb-accent)] ring-2 ring-white" />
         </button>
 
-        <Link
-          href="/settings"
-          className="flex min-w-0 shrink-0 items-center gap-2 rounded-[var(--radius-sm)] py-1 pl-1 pr-2 transition-colors hover:bg-slate-100"
-        >
-          <span className="relative flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-full border border-slate-200 bg-slate-100">
-            <Image
-              src="/logo.svg"
-              alt=""
-              width={36}
-              height={36}
-              className="size-8 object-contain p-1"
-            />
-          </span>
-          <span className="hidden min-w-0 text-left md:block">
-            <span className="block truncate text-sm font-semibold leading-tight text-slate-900">
-              Admin
-            </span>
-            <span className="block text-[11px] leading-tight text-slate-500">
-              admin
-            </span>
-          </span>
-        </Link>
+        <div className="flex shrink-0 items-center pl-1">
+          <UserButton
+            appearance={{
+              elements: {
+                avatarBox: "size-9 border border-slate-200",
+                userButtonPopoverCard:
+                  "rounded-[var(--radius)] border border-slate-200 shadow-lg",
+              },
+            }}
+          />
+        </div>
       </div>
     </header>
   );
