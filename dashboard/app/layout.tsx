@@ -24,7 +24,14 @@ export default function RootLayout({
       <body
         className={`${inter.className} min-h-full flex flex-col bg-[var(--page-bg)] text-[var(--foreground)]`}
       >
-        <ClerkProvider>{children}</ClerkProvider>
+        <ClerkProvider
+          signInUrl="/login"
+          signUpUrl="/signup"
+          signInFallbackRedirectUrl="/"
+          signUpFallbackRedirectUrl="/"
+        >
+          {children}
+        </ClerkProvider>
       </body>
     </html>
   );
