@@ -29,7 +29,7 @@ export function DashboardShell({
 
   return (
     <div className="flex h-[100dvh] overflow-hidden bg-[var(--page-bg)] text-[var(--foreground)]">
-      <div className="hidden md:flex">
+      <div className="hidden h-full min-h-0 shrink-0 md:flex">
         <DashboardSidebar profile={profile} onNavigate={closeMobile} />
       </div>
 

@@ -5,10 +5,11 @@ export const dynamic = "force-dynamic";
 
 export default function StudentsEnrolledPage() {
   return (
-    <WorkspaceShell subtitle="Active learners (same directory as all students for now).">
+    <WorkspaceShell subtitle="Direct applicants and the enrolled stream (non-apprenticeship).">
       <StudentsTableBlock
-        title="Active learners"
-        description="Profiles created when applications are approved. Uses GET /students."
+        title="Enrolled students"
+        description="Learners on the direct enrollment track. Data from GET /students with admission type."
+        admissionMode="enrolled"
       />
     </WorkspaceShell>
   );

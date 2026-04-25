@@ -2,6 +2,9 @@ import type { ApplicationRow, StudentRow } from "@/lib/api";
 
 export type DateRangePeriod = "all" | "7d" | "30d" | "90d";
 
+/** Applications-over-time chart only (no "all" bucket). */
+export type ChartPeriod = "7d" | "30d" | "90d";
+
 function normStatus(s: unknown): string {
   if (typeof s !== "string" || !s.trim()) return "pending";
   return s.trim().toLowerCase();

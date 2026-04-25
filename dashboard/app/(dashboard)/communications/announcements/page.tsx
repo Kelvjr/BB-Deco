@@ -1,22 +1,12 @@
-import { Megaphone } from "lucide-react";
-
-import { ComingSoon } from "@/components/coming-soon";
+import { AnnouncementsManager } from "@/components/announcements-manager";
+import { WorkspaceShell } from "@/components/workspace-shell";
 
 export const dynamic = "force-dynamic";
 
-export default function AnnouncementsPage() {
+export default function CommunicationsAnnouncementsPage() {
   return (
-    <ComingSoon
-      icon={Megaphone}
-      title="Announcements"
-      description="Compose, schedule, and send announcements to staff, students, and applicants. Reach your community in seconds with a beautiful editor."
-      features={[
-        "Rich text composer with attachments",
-        "Audience targeting (program, status, role)",
-        "Scheduling and read-receipt tracking",
-      ]}
-      ctaLabel="View dashboard"
-      ctaHref="/"
-    />
+    <WorkspaceShell subtitle="School-wide messages; delivery channels can be added without changing this UI.">
+      <AnnouncementsManager />
+    </WorkspaceShell>
   );
 }

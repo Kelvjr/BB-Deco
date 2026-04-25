@@ -8,8 +8,9 @@ import {
   Hourglass,
 } from "lucide-react";
 
-import type { ApplicationRow, StudentRow } from "@/lib/api";
+import type { ApplicationRow, ProgramBreakdownRow, StudentRow } from "@/lib/api";
 import {
+  type ChartPeriod,
   type DateRangePeriod,
   applicationsTripleSeries,
   kpiMetrics,
@@ -29,7 +30,7 @@ import { QuickActionsGrid } from "@/components/home/quick-actions-grid";
 import { StudentStreamDonut } from "@/components/home/student-stream-donut";
 import { TodayActivity } from "@/components/home/today-activity";
 
-const PERIODS: { id: DateRangePeriod; label: string }[] = [
+const KPI_PERIODS: { id: DateRangePeriod; label: string }[] = [
   { id: "all", label: "All time" },
   { id: "7d", label: "Last 7 days" },
   { id: "30d", label: "Last 30 days" },
@@ -49,19 +50,27 @@ function isApproved(s: unknown): boolean {
 export function DashboardHomeClient({
   applications,
   students,
+  programBreakdownFromApi,
+  streamEnrolled,
+  streamApprenticeship,
   loadError,
   displayName,
 }: {
   applications: ApplicationRow[];
   students: StudentRow[];
+  /** From GET /stats/program-breakdown; falls back to client-side aggregation if empty. */
+  programBreakdownFromApi: ProgramBreakdownRow[];
+  streamEnrolled: number;
+  streamApprenticeship: number;
   loadError: string | null;
   displayName: string;
 }) {
-  const [period, setPeriod] = useState<DateRangePeriod>("30d");
+  const [kpiPeriod, setKpiPeriod] = useState<DateRangePeriod>("all");
+  const [chartPeriod, setChartPeriod] = useState<ChartPeriod>("30d");
 
   const kpis = useMemo(
-    () => kpiMetrics(applications, students, period),
-    [applications, students, period],
+    () => kpiMetrics(applications, students, kpiPeriod),
+    [applications, students, kpiPeriod],
   );
 
   const allTimeKpis = useMemo(
@@ -70,14 +79,14 @@ export function DashboardHomeClient({
   );
 
   const triple = useMemo(
-    () => applicationsTripleSeries(applications, period),
-    [applications, period],
+    () => applicationsTripleSeries(applications, chartPeriod),
+    [applications, chartPeriod],
   );
 
-  const programs = useMemo(
-    () => programBreakdown(applications),
-    [applications],
-  );
+  const programs = useMemo(() => {
+    if (programBreakdownFromApi.length > 0) return programBreakdownFromApi;
+    return programBreakdown(applications);
+  }, [programBreakdownFromApi, applications]);
 
   const activity = useMemo(() => recentActivity(applications, 6), [applications]);
 
@@ -120,18 +129,18 @@ export function DashboardHomeClient({
             Performance
           </h2>
           <p className="text-sm text-slate-500">
-            Track admissions and student growth at a glance.
+            KPI cards respect the range below. The chart has its own window (7 / 30 / 90 days).
           </p>
         </div>
-        <div className="inline-flex h-9 items-center rounded-lg border border-slate-200 bg-white p-1 shadow-sm">
-          {PERIODS.map((p) => (
+        <div className="inline-flex h-9 flex-wrap items-center gap-0.5 rounded-lg border border-slate-200 bg-white p-0.5 shadow-sm">
+          {KPI_PERIODS.map((p) => (
             <button
               key={p.id}
               type="button"
-              onClick={() => setPeriod(p.id)}
+              onClick={() => setKpiPeriod(p.id)}
               className={cn(
-                "rounded-md px-3 py-1.5 text-[12px] font-medium transition-colors",
-                period === p.id
+                "rounded-md px-2.5 py-1.5 text-[11px] font-medium transition-colors sm:px-3 sm:text-[12px]",
+                kpiPeriod === p.id
                   ? "bg-[var(--bb-primary)] text-white shadow-sm"
                   : "text-slate-600 hover:bg-slate-100 hover:text-slate-900",
               )}
@@ -165,7 +174,7 @@ export function DashboardHomeClient({
         />
         <KpiCard
           label="Total students"
-          value={students.length}
+          value={kpisPeriodStudentCount(students, kpiPeriod)}
           trendPct={trendStudents}
           trendLabel="vs prior 30 days"
           href="/students/all"
@@ -187,7 +196,11 @@ export function DashboardHomeClient({
 
       <section className="grid gap-4 lg:grid-cols-12">
         <div className="lg:col-span-8">
-          <ApplicationsBarChart data={triple} period={period} />
+          <ApplicationsBarChart
+            data={triple}
+            period={chartPeriod}
+            onPeriodChange={setChartPeriod}
+          />
         </div>
         <div className="lg:col-span-4">
           <QuickActionsGrid />
@@ -197,8 +210,8 @@ export function DashboardHomeClient({
       <section className="grid gap-4 lg:grid-cols-12">
         <div className="lg:col-span-5">
           <StudentStreamDonut
-            enrolled={students.length}
-            apprenticeship={0}
+            enrolled={streamEnrolled}
+            apprenticeship={streamApprenticeship}
           />
         </div>
         <div className="lg:col-span-4">
@@ -214,4 +227,21 @@ export function DashboardHomeClient({
       </section>
     </div>
   );
+}
+
+function kpisPeriodStudentCount(
+  students: StudentRow[],
+  period: DateRangePeriod,
+): number {
+  if (period === "all") return students.length;
+  const now = Date.now();
+  const days = period === "7d" ? 7 : period === "30d" ? 30 : 90;
+  const ms = days * 24 * 60 * 60 * 1000;
+  return students.filter((r) => {
+    const raw = r.created_at;
+    if (typeof raw !== "string") return false;
+    const t = new Date(raw).getTime();
+    if (Number.isNaN(t)) return false;
+    return now - t <= ms;
+  }).length;
 }

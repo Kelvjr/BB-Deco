@@ -1,12 +1,10 @@
 import {
   BarChart3,
-  Bell,
   BookOpen,
   Briefcase,
   ClipboardList,
   Cog,
   GraduationCap,
-  Home,
   Layers,
   LayoutDashboard,
   type LucideIcon,
@@ -33,7 +31,8 @@ export type NavGroup = {
   label: string;
   icon: LucideIcon;
   defaultOpen?: boolean;
-  rootHref?: string;
+  rootHref: string;
+  /** Single-link top-level entries have an empty children list. */
   children: NavLeaf[];
 };
 
@@ -42,13 +41,15 @@ export const NAV_GROUPS: NavGroup[] = [
     id: "dashboard",
     label: "Dashboard",
     icon: LayoutDashboard,
-    defaultOpen: true,
     rootHref: "/",
-    children: [
-      { label: "Overview", href: "/", icon: Home },
-      { label: "Analytics", href: "/dashboard/analytics", icon: BarChart3 },
-      { label: "Announcements", href: "/dashboard/announcements", icon: Bell },
-    ],
+    children: [],
+  },
+  {
+    id: "analytics",
+    label: "Analytics",
+    icon: BarChart3,
+    rootHref: "/dashboard/analytics",
+    children: [],
   },
   {
     id: "admissions",
@@ -107,6 +108,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: "School Profile", href: "/settings/school-profile", icon: School },
       { label: "Users & Roles", href: "/settings/users-roles", icon: ShieldCheck },
       { label: "Preferences", href: "/settings/preferences", icon: Sparkles },
+      { label: "Security", href: "/settings/security", icon: ShieldCheck },
     ],
   },
 ];
@@ -120,22 +122,32 @@ export type FlatNavEntry = {
 export function flattenNav(): FlatNavEntry[] {
   const out: FlatNavEntry[] = [];
   for (const g of NAV_GROUPS) {
-    for (const leaf of g.children) {
-      out.push({ groupLabel: g.label, groupIcon: g.icon, leaf });
+    if (g.children.length === 0) {
+      out.push({
+        groupLabel: g.label,
+        groupIcon: g.icon,
+        leaf: { label: g.label, href: g.rootHref },
+      });
+    } else {
+      for (const leaf of g.children) {
+        out.push({ groupLabel: g.label, groupIcon: g.icon, leaf });
+      }
     }
   }
   return out;
 }
 
 /** Section prefix → group id. Used to map detail/legacy routes to a group. */
+/** Longer paths first so `/dashboard/analytics` matches Analytics, not Dashboard. */
 const SECTION_PREFIXES: { prefix: string; groupId: string }[] = [
+  { prefix: "/dashboard/analytics", groupId: "analytics" },
+  { prefix: "/dashboard/announcements", groupId: "communications" },
   { prefix: "/admissions", groupId: "admissions" },
   { prefix: "/applications", groupId: "admissions" },
   { prefix: "/students", groupId: "students" },
   { prefix: "/programs", groupId: "programs" },
   { prefix: "/communications", groupId: "communications" },
   { prefix: "/settings", groupId: "settings" },
-  { prefix: "/dashboard", groupId: "dashboard" },
 ];
 
 export function findGroupForPath(pathname: string): NavGroup | undefined {
@@ -163,6 +175,8 @@ export function findLeafForPath(pathname: string): NavLeaf | undefined {
 
 /** Best-effort title for a route (used as the page title in the top bar). */
 export function titleForPath(pathname: string): string {
+  if (pathname === "/dashboard/analytics") return "Analytics";
+  if (pathname === "/dashboard/announcements") return "Announcements";
   const leaf = findLeafForPath(pathname);
   if (leaf) return leaf.label;
   if (
@@ -170,6 +184,21 @@ export function titleForPath(pathname: string): string {
     pathname !== "/applications/all"
   ) {
     return "Application detail";
+  }
+  if (
+    pathname.startsWith("/students/") &&
+    !pathname.match(/^\/students\/(all|enrolled|apprenticeships|add)$/)
+  ) {
+    return "Student profile";
+  }
+  if (pathname.match(/^\/programs\/[^/]+\/edit$/)) return "Edit program";
+  if (
+    pathname.startsWith("/programs/") &&
+    !pathname.match(
+      /^\/programs\/(all|add|curriculum-builder|categories)(\/|$)/,
+    )
+  ) {
+    return "Program detail";
   }
   const group = findGroupForPath(pathname);
   return group?.label ?? "Dashboard";

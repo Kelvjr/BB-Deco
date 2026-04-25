@@ -219,6 +219,11 @@ export type StudentRow = {
   email?: string | null;
   phone?: string | null;
   program_applied?: string | null;
+  /** enrolled | apprenticeship */
+  admission_type?: string | null;
+  status?: string | null;
+  profile_image?: string | null;
+  notes?: string | null;
   created_at?: string | null;
   [key: string]: unknown;
 };
@@ -281,6 +286,8 @@ export type StudentTableRowView = {
   program: string;
   phone: string;
   joinedAt: string;
+  admissionType: string;
+  status: string;
 };
 
 export function studentTableRows(rows: StudentRow[]): StudentTableRowView[] {
@@ -290,6 +297,9 @@ export function studentTableRows(rows: StudentRow[]): StudentTableRowView[] {
       String(row.id).trim() !== ""
         ? String(row.id)
         : `${row.student_number ?? "row"}-${index}`;
+    const at = (row.admission_type ?? "enrolled").toLowerCase();
+    const admissionLabel =
+      at === "apprenticeship" ? "Apprenticeship" : "Enrolled";
     return {
       key,
       studentId: row.student_number?.trim() || "—",
@@ -298,8 +308,154 @@ export function studentTableRows(rows: StudentRow[]): StudentTableRowView[] {
       program: row.program_applied?.trim() || "—",
       phone: row.phone?.trim() || "—",
       joinedAt: formatSubmittedAt(row as ApplicationRow),
+      admissionType: admissionLabel,
+      status: (row.status ?? "active").trim() || "active",
     };
   });
 }
 
 export const fetchStudentsCached = cache(async () => fetchStudents());
+
+export type ProgramBreakdownRow = { program: string; count: number };
+
+export async function fetchProgramBreakdown(): Promise<
+  | { ok: true; data: ProgramBreakdownRow[] }
+  | { ok: false; error: string }
+> {
+  const base = resolveApiBase();
+  if (!base) {
+    return {
+      ok: false,
+      error: "API URL is not set.",
+    };
+  }
+  try {
+    const res = await fetch(`${base}/stats/program-breakdown`, {
+      cache: "no-store",
+    });
+    const text = await res.text();
+    let parsed: unknown = [];
+    if (text) parsed = JSON.parse(text);
+    if (!res.ok) {
+      const body = parsed as { error?: string };
+      return { ok: false, error: body.error || `HTTP ${res.status}` };
+    }
+    if (!Array.isArray(parsed)) {
+      return { ok: false, error: "Unexpected response." };
+    }
+    const data = (parsed as { program?: string; count?: number }[]).map(
+      (r) => ({
+        program: String(r.program ?? "Unspecified"),
+        count: Number(r.count ?? 0),
+      }),
+    );
+    return { ok: true, data };
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : "Request failed";
+    return { ok: false, error: msg };
+  }
+}
+
+export const fetchProgramBreakdownCached = cache(async () =>
+  fetchProgramBreakdown(),
+);
+
+export type ProgramRow = {
+  id?: string;
+  name?: string | null;
+  duration?: string | null;
+  description?: string | null;
+  curriculum?: unknown;
+  admission_requirements?: string | null;
+  status?: string | null;
+  application_count?: number;
+  created_at?: string | null;
+  updated_at?: string | null;
+  [key: string]: unknown;
+};
+
+export async function fetchPrograms(): Promise<
+  | { ok: true; data: ProgramRow[] }
+  | { ok: false; error: string }
+> {
+  const base = resolveApiBase();
+  if (!base) return { ok: false, error: "API URL is not set." };
+  try {
+    const res = await fetch(`${base}/programs`, { cache: "no-store" });
+    const text = await res.text();
+    const parsed = text ? JSON.parse(text) : [];
+    if (!res.ok) {
+      const body = parsed as { error?: string };
+      return { ok: false, error: body.error || `HTTP ${res.status}` };
+    }
+    if (!Array.isArray(parsed)) return { ok: false, error: "Unexpected response." };
+    return { ok: true, data: parsed as ProgramRow[] };
+  } catch (e) {
+    return {
+      ok: false,
+      error: e instanceof Error ? e.message : "Request failed",
+    };
+  }
+}
+
+export async function fetchProgramById(
+  id: string,
+): Promise<{ ok: true; data: ProgramRow } | { ok: false; error: string }> {
+  const base = resolveApiBase();
+  if (!base) return { ok: false, error: "API URL is not set." };
+  try {
+    const res = await fetch(`${base}/programs/${encodeURIComponent(id)}`, {
+      cache: "no-store",
+    });
+    const text = await res.text();
+    const parsed = text ? JSON.parse(text) : {};
+    if (!res.ok) {
+      const body = parsed as { error?: string };
+      return { ok: false, error: body.error || `HTTP ${res.status}` };
+    }
+    return { ok: true, data: parsed as ProgramRow };
+  } catch (e) {
+    return {
+      ok: false,
+      error: e instanceof Error ? e.message : "Request failed",
+    };
+  }
+}
+
+export const fetchProgramsCached = cache(async () => fetchPrograms());
+
+export async function fetchStudentById(
+  id: string,
+): Promise<
+  | { ok: true; data: StudentRow }
+  | { ok: false; error: string; status: number }
+> {
+  const base = resolveApiBase();
+  if (!base) return { ok: false, error: "API URL is not set.", status: 503 };
+  try {
+    const res = await fetch(`${base}/students/${encodeURIComponent(id)}`, {
+      cache: "no-store",
+    });
+    const text = await res.text();
+    const parsed = text ? JSON.parse(text) : {};
+    if (!res.ok) {
+      const body = parsed as { error?: string };
+      return {
+        ok: false,
+        error: body.error || `HTTP ${res.status}`,
+        status: res.status,
+      };
+    }
+    return { ok: true, data: parsed as StudentRow };
+  } catch (e) {
+    return {
+      ok: false,
+      error: e instanceof Error ? e.message : "Request failed",
+      status: 503,
+    };
+  }
+}
+
+export const fetchStudentByIdCached = cache(async (id: string) =>
+  fetchStudentById(id),
+);

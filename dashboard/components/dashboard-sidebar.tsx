@@ -8,7 +8,6 @@ import {
   ChevronDown,
   PanelLeftClose,
   PanelLeftOpen,
-  Plus,
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -43,7 +42,83 @@ function isLeafActive(pathname: string, leaf: NavLeaf): boolean {
 }
 
 function isGroupActive(pathname: string, group: NavGroup): boolean {
+  if (group.children.length === 0) {
+    if (group.rootHref === "/") return pathname === "/";
+    if (group.id === "analytics") {
+      return pathname === group.rootHref;
+    }
+    return (
+      pathname === group.rootHref ||
+      pathname.startsWith(group.rootHref + "/")
+    );
+  }
   return group.children.some((c) => isLeafActive(pathname, c));
+}
+
+function SingleLeaf({
+  group,
+  pathname,
+  collapsed,
+  onNavigate,
+}: {
+  group: NavGroup;
+  pathname: string;
+  collapsed: boolean;
+  onNavigate?: () => void;
+}) {
+  const active = isGroupActive(pathname, group);
+  const Icon = group.icon;
+
+  if (collapsed) {
+    return (
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Link
+            href={group.rootHref}
+            onClick={onNavigate}
+            className={cn(
+              "relative flex h-10 w-10 items-center justify-center rounded-lg transition-colors",
+              active
+                ? "bg-[rgba(8,151,53,0.10)] text-[var(--bb-primary)]"
+                : "text-slate-500 hover:bg-slate-100 hover:text-slate-900",
+            )}
+            aria-label={group.label}
+          >
+            <Icon className="size-[18px]" strokeWidth={1.75} />
+            {active ? (
+              <span
+                aria-hidden
+                className="absolute right-0 top-1/2 h-5 w-[2px] -translate-y-1/2 rounded-full bg-[var(--bb-primary)]"
+              />
+            ) : null}
+          </Link>
+        </TooltipTrigger>
+        <TooltipContent side="right">{group.label}</TooltipContent>
+      </Tooltip>
+    );
+  }
+
+  return (
+    <Link
+      href={group.rootHref}
+      onClick={onNavigate}
+      className={cn(
+        "relative flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-[13px] font-medium transition-colors",
+        active
+          ? "bg-[rgba(8,151,53,0.10)] text-[var(--bb-primary)]"
+          : "text-slate-600 hover:bg-slate-100 hover:text-slate-900",
+      )}
+    >
+      <Icon
+        className={cn(
+          "size-[18px] shrink-0",
+          active ? "text-[var(--bb-primary)]" : "text-slate-400",
+        )}
+        strokeWidth={1.75}
+      />
+      <span className="flex-1 text-left tracking-tight">{group.label}</span>
+    </Link>
+  );
 }
 
 function GroupBlock({
@@ -198,9 +273,7 @@ function BrandRow({
       <Link
         href="/"
         onClick={onNavigate}
-        className={cn(
-          "flex min-w-0 items-center gap-2.5 transition-opacity hover:opacity-90",
-        )}
+        className="flex min-w-0 items-center gap-2.5 transition-opacity hover:opacity-90"
       >
         <Image
           src="/logo.svg"
@@ -337,7 +410,7 @@ export function DashboardSidebar({
       <aside
         data-collapsed={collapsed ? "true" : "false"}
         className={cn(
-          "relative flex h-full flex-col border-r border-slate-200 bg-white transition-[width] duration-200 ease-out",
+          "relative flex h-full min-h-0 flex-col border-r border-slate-200 bg-white transition-[width] duration-200 ease-out",
           collapsed ? "w-[68px]" : "w-[252px] xl:w-[260px]",
         )}
       >
@@ -349,47 +422,41 @@ export function DashboardSidebar({
 
         {collapsed ? <ExpandFloatingButton onToggle={toggleCollapse} /> : null}
 
-        <ScrollArea className="flex-1">
+        <ScrollArea
+          className="min-h-0 flex-1 overscroll-y-contain"
+        >
           <nav
             className={cn(
-              "flex flex-col gap-1.5 py-3",
-              collapsed ? "items-center px-2" : "px-3",
+              "pb-2",
+              collapsed ? "px-2 py-3" : "px-3 py-3",
             )}
           >
-            {!collapsed ? (
-              <Link
-                href="/students/add"
-                onClick={onNavigate}
-                className="mb-2 flex w-full items-center gap-2 rounded-lg bg-[var(--bb-primary)] px-3 py-2 text-[13px] font-semibold text-white shadow-sm transition-colors hover:bg-[var(--bb-primary-hover)]"
-              >
-                <Plus className="size-4" strokeWidth={2} />
-                <span>Add Student</span>
-              </Link>
-            ) : (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Link
-                    href="/students/add"
-                    onClick={onNavigate}
-                    className="mb-2 flex size-10 items-center justify-center rounded-lg bg-[var(--bb-primary)] text-white shadow-sm transition-colors hover:bg-[var(--bb-primary-hover)]"
-                    aria-label="Add Student"
-                  >
-                    <Plus className="size-4" strokeWidth={2} />
-                  </Link>
-                </TooltipTrigger>
-                <TooltipContent side="right">Add Student</TooltipContent>
-              </Tooltip>
-            )}
-
-            {NAV_GROUPS.map((group) => (
-              <GroupBlock
-                key={group.id}
-                group={group}
-                pathname={pathname}
-                collapsed={collapsed}
-                onNavigate={onNavigate}
-              />
-            ))}
+            <div
+              className={cn(
+                "flex flex-col gap-1.5",
+                collapsed ? "items-center" : "",
+              )}
+            >
+              {NAV_GROUPS.map((group) =>
+                group.children.length === 0 ? (
+                  <SingleLeaf
+                    key={group.id}
+                    group={group}
+                    pathname={pathname}
+                    collapsed={collapsed}
+                    onNavigate={onNavigate}
+                  />
+                ) : (
+                  <GroupBlock
+                    key={group.id}
+                    group={group}
+                    pathname={pathname}
+                    collapsed={collapsed}
+                    onNavigate={onNavigate}
+                  />
+                ),
+              )}
+            </div>
           </nav>
         </ScrollArea>
 

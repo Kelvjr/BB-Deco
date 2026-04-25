@@ -12,6 +12,7 @@ import {
 } from "recharts";
 import { TrendingUp } from "lucide-react";
 
+import { cn } from "@/lib/utils";
 import {
   Card,
   CardContent,
@@ -19,7 +20,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import type { DateRangePeriod } from "@/lib/stats";
+import type { ChartPeriod } from "@/lib/stats";
 
 type Datum = {
   label: string;
@@ -28,7 +29,7 @@ type Datum = {
   rejected: number;
 };
 
-function periodDescription(period: DateRangePeriod): string {
+function periodDescription(period: ChartPeriod): string {
   switch (period) {
     case "7d":
       return "Day-by-day for the last 7 days";
@@ -37,26 +38,53 @@ function periodDescription(period: DateRangePeriod): string {
     case "90d":
       return "Weekly buckets for the last 90 days";
     default:
-      return "Weekly buckets across recent activity";
+      return "";
   }
 }
+
+const CHART_PERIODS: { id: ChartPeriod; label: string }[] = [
+  { id: "7d", label: "Last 7 days" },
+  { id: "30d", label: "Last 30 days" },
+  { id: "90d", label: "Last 90 days" },
+];
 
 export function ApplicationsBarChart({
   data,
   period,
+  onPeriodChange,
 }: {
   data: Datum[];
-  period: DateRangePeriod;
+  period: ChartPeriod;
+  onPeriodChange: (p: ChartPeriod) => void;
 }) {
   return (
     <Card className="h-full">
-      <CardHeader className="flex flex-row items-start justify-between gap-3 space-y-0">
-        <div>
+      <CardHeader className="flex flex-col gap-4 space-y-0 lg:flex-row lg:items-start lg:justify-between">
+        <div className="min-w-0 flex-1">
           <CardTitle>Applications over time</CardTitle>
           <CardDescription>{periodDescription(period)}</CardDescription>
         </div>
-        <div className="flex size-9 items-center justify-center rounded-lg bg-[rgba(8,151,53,0.10)] text-[var(--bb-primary)]">
-          <TrendingUp className="size-[18px]" strokeWidth={1.75} />
+        <div className="flex flex-wrap items-center gap-2 lg:justify-end">
+          <div className="inline-flex h-9 flex-wrap items-center gap-0.5 rounded-lg border border-slate-200 bg-slate-50 p-0.5">
+            {CHART_PERIODS.map((p) => (
+              <button
+                key={p.id}
+                type="button"
+                onClick={() => onPeriodChange(p.id)}
+                className={cn(
+                  "rounded-md px-2.5 py-1.5 text-[11px] font-medium transition-colors sm:px-3 sm:text-[12px]",
+                  period === p.id
+                    ? "bg-[var(--bb-primary)] text-white shadow-sm"
+                    : "text-slate-600 hover:bg-white hover:text-slate-900",
+                )}
+              >
+                {p.label}
+              </button>
+            ))}
+          </div>
+          <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-[rgba(8,151,53,0.10)] text-[var(--bb-primary)]">
+            <TrendingUp className="size-[18px]" strokeWidth={1.75} />
+          </div>
         </div>
       </CardHeader>
       <CardContent>

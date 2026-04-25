@@ -4,7 +4,6 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Check, ChevronDown, X } from "lucide-react";
 import { ConfirmDialog } from "@/components/confirm-dialog";
-import { cn } from "@/lib/cn";
 
 const STATUSES = ["pending", "approved", "rejected", "submitted"] as const;
 

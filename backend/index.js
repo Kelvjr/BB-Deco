@@ -326,6 +326,118 @@ async function main() {
     }
   });
 
+  app.get("/stats/program-breakdown", async (_req, res) => {
+    try {
+      const result = await pool.query(
+        `SELECT COALESCE(NULLIF(TRIM(program_applied), ''), 'Unspecified') AS program,
+                COUNT(*)::int AS count
+         FROM applications
+         GROUP BY 1
+         ORDER BY count DESC, program ASC`,
+      );
+      res.json(result.rows);
+    } catch (err) {
+      console.error("DB ERROR:", err.message);
+      res.status(500).json({
+        error: "Failed to load program breakdown",
+        details: err.message,
+      });
+    }
+  });
+
+  app.get("/programs", async (_req, res) => {
+    try {
+      const result = await pool.query(
+        `SELECT p.*, (
+           SELECT COUNT(*)::int FROM applications a
+           WHERE lower(trim(a.program_applied)) = lower(trim(p.name))
+         ) AS application_count
+         FROM programs p
+         ORDER BY p.created_at DESC NULLS LAST, p.name ASC`,
+      );
+      res.json(result.rows.map((row) => rowForJson(row)));
+    } catch (err) {
+      console.error("DB ERROR:", err.message);
+      res.status(500).json({
+        error: "Failed to fetch programs",
+        details: err.message,
+      });
+    }
+  });
+
+  app.get("/programs/:id", async (req, res) => {
+    const id = safeIdParam(req.params.id);
+    if (!id) return res.status(400).json({ error: "Invalid id" });
+    try {
+      const one = await pool.query(`SELECT * FROM programs WHERE id::text = $1`, [id]);
+      if (one.rowCount === 0) return res.status(404).json({ error: "Not found" });
+      const row = rowForJson(one.rows[0]);
+      const c = await pool.query(
+        `SELECT COUNT(*)::int AS n FROM applications WHERE lower(trim(program_applied)) = lower(trim($1))`,
+        [row.name],
+      );
+      res.json({ ...row, application_count: c.rows[0]?.n ?? 0 });
+    } catch (err) {
+      console.error("DB ERROR:", err.message);
+      res.status(500).json({ error: "Failed to load program", details: err.message });
+    }
+  });
+
+  app.post("/programs", async (req, res) => {
+    const b = req.body || {};
+    const name = typeof b.name === "string" ? b.name.trim() : "";
+    if (!name) return res.status(400).json({ error: "name is required" });
+    const duration = typeof b.duration === "string" ? b.duration : null;
+    const description = typeof b.description === "string" ? b.description : null;
+    const curriculum = Array.isArray(b.curriculum) ? JSON.stringify(b.curriculum) : "[]";
+    const admission_requirements =
+      typeof b.admission_requirements === "string" ? b.admission_requirements : null;
+    const status = typeof b.status === "string" && b.status.trim() ? b.status.trim() : "active";
+    try {
+      const ins = await pool.query(
+        `INSERT INTO programs (name, duration, description, curriculum, admission_requirements, status)
+         VALUES ($1, $2, $3, $4::jsonb, $5, $6) RETURNING *`,
+        [name, duration, description, curriculum, admission_requirements, status],
+      );
+      res.status(201).json(rowForJson(ins.rows[0]));
+    } catch (err) {
+      console.error("DB ERROR:", err.message);
+      res.status(500).json({ error: "Failed to create program", details: err.message });
+    }
+  });
+
+  app.put("/programs/:id", async (req, res) => {
+    const id = safeIdParam(req.params.id);
+    if (!id) return res.status(400).json({ error: "Invalid id" });
+    const b = req.body || {};
+    try {
+      const cur = await pool.query(`SELECT * FROM programs WHERE id::text = $1`, [id]);
+      if (cur.rowCount === 0) return res.status(404).json({ error: "Not found" });
+      const row = cur.rows[0];
+      const name = typeof b.name === "string" ? b.name.trim() : row.name;
+      const duration = b.duration !== undefined ? b.duration : row.duration;
+      const description = b.description !== undefined ? b.description : row.description;
+      const curriculum =
+        b.curriculum !== undefined ? JSON.stringify(b.curriculum) : JSON.stringify(row.curriculum || []);
+      const admission_requirements =
+        b.admission_requirements !== undefined
+          ? b.admission_requirements
+          : row.admission_requirements;
+      const status = typeof b.status === "string" && b.status.trim() ? b.status : row.status;
+      const upd = await pool.query(
+        `UPDATE programs SET
+          name = $1, duration = $2, description = $3, curriculum = $4::jsonb,
+          admission_requirements = $5, status = $6, updated_at = now()
+         WHERE id::text = $7 RETURNING *`,
+        [name, duration, description, curriculum, admission_requirements, status, id],
+      );
+      res.json(rowForJson(upd.rows[0]));
+    } catch (err) {
+      console.error("DB ERROR:", err.message);
+      res.status(500).json({ error: "Failed to update program", details: err.message });
+    }
+  });
+
   app.get("/students", async (_req, res) => {
     try {
       const result = await pool.query(
@@ -339,6 +451,137 @@ async function main() {
         error: "Failed to fetch students",
         details: err.message,
       });
+    }
+  });
+
+  app.get("/students/:id", async (req, res) => {
+    const id = safeIdParam(req.params.id);
+    if (!id) return res.status(400).json({ error: "Invalid id" });
+    try {
+      const result = await pool.query(`SELECT * FROM students WHERE id::text = $1`, [id]);
+      if (result.rowCount === 0) {
+        return res.status(404).json({ error: "Student not found" });
+      }
+      res.json(rowForJson(result.rows[0]));
+    } catch (err) {
+      console.error("DB ERROR:", err.message);
+      res.status(500).json({ error: "Failed to load student", details: err.message });
+    }
+  });
+
+  app.post("/students", async (req, res) => {
+    const b = req.body || {};
+    const full_name = typeof b.full_name === "string" ? b.full_name.trim() : "";
+    if (!full_name) return res.status(400).json({ error: "full_name is required" });
+    const email = typeof b.email === "string" ? b.email : null;
+    const phone = typeof b.phone === "string" ? b.phone : null;
+    const program_applied = typeof b.program_applied === "string" ? b.program_applied : null;
+    const admission_type =
+      typeof b.admission_type === "string" &&
+      ["enrolled", "apprenticeship"].includes(b.admission_type.trim().toLowerCase())
+        ? b.admission_type.trim().toLowerCase()
+        : "enrolled";
+    const application_id =
+      typeof b.application_id === "string" && b.application_id.trim()
+        ? b.application_id.trim()
+        : `manual-${Date.now()}`;
+    const profile_image = typeof b.profile_image === "string" ? b.profile_image : null;
+    const client = await pool.connect();
+    try {
+      await client.query("BEGIN");
+      const seqRes = await client.query("SELECT nextval('student_number_seq') AS n");
+      const n = Number(seqRes.rows[0].n);
+      const yr = new Date().getFullYear();
+      const studentNumber = `BB-${yr}-${String(n).padStart(5, "0")}`;
+      const ins = await client.query(
+        `INSERT INTO students (student_number, application_id, full_name, email, phone, program_applied, admission_type, profile_image)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`,
+        [studentNumber, application_id, full_name, email, phone, program_applied, admission_type, profile_image],
+      );
+      await client.query("COMMIT");
+      res.status(201).json(rowForJson(ins.rows[0]));
+    } catch (err) {
+      try {
+        await client.query("ROLLBACK");
+      } catch (_) {
+        /* ignore */
+      }
+      console.error("DB ERROR:", err.message);
+      res.status(500).json({ error: "Failed to create student", details: err.message });
+    } finally {
+      client.release();
+    }
+  });
+
+  app.patch("/students/:id", async (req, res) => {
+    const id = safeIdParam(req.params.id);
+    if (!id) return res.status(400).json({ error: "Invalid id" });
+    const b = req.body || {};
+    try {
+      const cur = await pool.query(`SELECT * FROM students WHERE id::text = $1`, [id]);
+      if (cur.rowCount === 0) return res.status(404).json({ error: "Student not found" });
+      const row = cur.rows[0];
+      const full_name = b.full_name !== undefined ? b.full_name : row.full_name;
+      const email = b.email !== undefined ? b.email : row.email;
+      const phone = b.phone !== undefined ? b.phone : row.phone;
+      const program_applied = b.program_applied !== undefined ? b.program_applied : row.program_applied;
+      const admission_type =
+        b.admission_type !== undefined &&
+        typeof b.admission_type === "string" &&
+        ["enrolled", "apprenticeship"].includes(b.admission_type.trim().toLowerCase())
+          ? b.admission_type.trim().toLowerCase()
+          : row.admission_type;
+      const status = b.status !== undefined ? b.status : row.status;
+      const profile_image = b.profile_image !== undefined ? b.profile_image : row.profile_image;
+      const notes = b.notes !== undefined ? b.notes : row.notes;
+      const result = await pool.query(
+        `UPDATE students SET
+          full_name = $1, email = $2, phone = $3, program_applied = $4,
+          admission_type = $5, status = $6, profile_image = $7, notes = $8
+         WHERE id::text = $9
+         RETURNING *`,
+        [full_name, email, phone, program_applied, admission_type, status, profile_image, notes, id],
+      );
+      res.json(rowForJson(result.rows[0]));
+    } catch (err) {
+      console.error("DB ERROR:", err.message);
+      res.status(500).json({ error: "Failed to update student", details: err.message });
+    }
+  });
+
+  app.get("/announcements", async (_req, res) => {
+    try {
+      const r = await pool.query(
+        `SELECT * FROM announcements ORDER BY created_at DESC NULLS LAST`,
+      );
+      res.json(r.rows.map((row) => rowForJson(row)));
+    } catch (err) {
+      console.error("DB ERROR:", err.message);
+      res.status(500).json({ error: "Failed to fetch announcements", details: err.message });
+    }
+  });
+
+  app.post("/announcements", async (req, res) => {
+    const b = req.body || {};
+    const title = typeof b.title === "string" ? b.title.trim() : "";
+    const body = typeof b.body === "string" ? b.body : "";
+    if (!title || !body) {
+      return res.status(400).json({ error: "title and body are required" });
+    }
+    const audience = typeof b.audience === "string" ? b.audience : "all";
+    const status = typeof b.status === "string" && b.status ? b.status : "draft";
+    try {
+      const ins = await pool.query(
+        `INSERT INTO announcements (title, body, audience, status)
+         VALUES ($1, $2, $3, $4) RETURNING *`,
+        [title, body, audience, status],
+      );
+      res.status(201).json(rowForJson(ins.rows[0]));
+    } catch (err) {
+      console.error("DB ERROR:", err.message);
+      res
+        .status(500)
+        .json({ error: "Failed to create announcement", details: err.message });
     }
   });
 
@@ -387,8 +630,8 @@ async function main() {
           const yr = new Date().getFullYear();
           const studentNumber = `BB-${yr}-${String(n).padStart(5, "0")}`;
           await client.query(
-            `INSERT INTO students (student_number, application_id, full_name, email, phone, program_applied)
-             VALUES ($1, $2, $3, $4, $5, $6)`,
+            `INSERT INTO students (student_number, application_id, full_name, email, phone, program_applied, admission_type)
+             VALUES ($1, $2, $3, $4, $5, $6, 'enrolled')`,
             [
               studentNumber,
               appId,

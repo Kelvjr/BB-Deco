@@ -1,49 +1,36 @@
 import { Users } from "lucide-react";
+import { StudentsTableBody } from "@/components/students-table-body";
 import {
   fetchStudentsCached,
   studentTableRows,
-  type StudentTableRowView,
+  type StudentRow,
 } from "@/lib/api";
 
-function StudentsTableBody({ rows }: { rows: StudentTableRowView[] }) {
-  return (
-    <tbody>
-      {rows.map((r) => (
-        <tr
-          key={r.key}
-          className="border-t border-[var(--border)] transition-colors hover:bg-[rgba(8,151,53,0.06)] dark:hover:bg-[rgba(8,151,53,0.1)]"
-        >
-          <td className="px-4 py-3 text-sm font-semibold text-[var(--foreground)]">
-            {r.studentId}
-          </td>
-          <td className="px-4 py-3 text-sm text-[var(--foreground)]">{r.name}</td>
-          <td className="max-w-[12rem] truncate px-4 py-3 text-sm text-[var(--muted-foreground)]">
-            {r.email}
-          </td>
-          <td className="max-w-[10rem] truncate px-4 py-3 text-sm text-[var(--foreground)]">
-            {r.program}
-          </td>
-          <td className="px-4 py-3 text-sm text-[var(--muted-foreground)]">
-            {r.phone}
-          </td>
-          <td className="whitespace-nowrap px-4 py-3 text-sm text-[var(--muted-foreground)]">
-            {r.joinedAt}
-          </td>
-        </tr>
-      ))}
-    </tbody>
-  );
+function filterByAdmission(
+  students: StudentRow[],
+  mode: "all" | "enrolled" | "apprenticeship",
+): StudentRow[] {
+  if (mode === "all") return students;
+  return students.filter((s) => {
+    const t = (s.admission_type ?? "enrolled").toLowerCase();
+    if (mode === "apprenticeship") return t === "apprenticeship";
+    return t !== "apprenticeship";
+  });
 }
 
 export async function StudentsTableBlock({
   title,
   description,
+  admissionMode = "all",
 }: {
   title: string;
   description: string;
+  /** Subset: enrolled = non-apprenticeship stream, apprenticeship = government stream. */
+  admissionMode?: "all" | "enrolled" | "apprenticeship";
 }) {
   const result = await fetchStudentsCached();
-  const students = result.ok ? result.data : [];
+  const allStudents = result.ok ? result.data : [];
+  const students = filterByAdmission(allStudents, admissionMode);
   const rows = studentTableRows(students);
   const loadError = result.ok ? null : result.error;
 
@@ -51,13 +38,11 @@ export async function StudentsTableBlock({
     <div className="space-y-4">
       {loadError ? (
         <div
-          className="rounded-[var(--radius)] border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-100"
+          className="rounded-[var(--radius)] border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950"
           role="alert"
         >
           <p className="font-medium">Could not load students</p>
-          <p className="mt-1 text-amber-900/90 dark:text-amber-200/90">
-            {loadError}
-          </p>
+          <p className="mt-1 text-amber-900/90">{loadError}</p>
         </div>
       ) : null}
 
@@ -72,13 +57,15 @@ export async function StudentsTableBlock({
         </div>
 
         <div className="mt-5 overflow-x-auto rounded-[var(--radius-sm)] border border-[var(--border)]">
-          <table className="w-full min-w-[42rem] text-left">
+          <table className="w-full min-w-[56rem] text-left">
             <thead className="bg-[var(--muted)]/80 text-xs font-semibold uppercase tracking-wide text-[var(--muted-foreground)]">
               <tr>
                 <th className="px-4 py-3">Student ID</th>
                 <th className="px-4 py-3">Name</th>
                 <th className="px-4 py-3">Email</th>
                 <th className="px-4 py-3">Program</th>
+                <th className="px-4 py-3">Admission</th>
+                <th className="px-4 py-3">Status</th>
                 <th className="px-4 py-3">Phone</th>
                 <th className="px-4 py-3">Date admitted</th>
               </tr>
@@ -88,7 +75,7 @@ export async function StudentsTableBlock({
                 <tr className="border-t border-[var(--border)]">
                   <td
                     className="px-4 py-8 text-sm text-[var(--muted-foreground)]"
-                    colSpan={6}
+                    colSpan={8}
                   >
                     Fix the configuration above, then refresh this page.
                   </td>
@@ -97,17 +84,16 @@ export async function StudentsTableBlock({
             ) : rows.length === 0 ? (
               <tbody>
                 <tr className="border-t border-[var(--border)]">
-                  <td colSpan={6} className="px-4 py-16 text-center">
+                  <td colSpan={8} className="px-4 py-16 text-center">
                     <div className="mx-auto flex max-w-sm flex-col items-center">
                       <div className="flex size-14 items-center justify-center rounded-full bg-[var(--muted)] text-[var(--muted-foreground)]">
                         <Users className="size-7" strokeWidth={1.5} />
                       </div>
                       <p className="mt-4 text-base font-medium text-[var(--foreground)]">
-                        No students yet
+                        No students in this list
                       </p>
                       <p className="mt-2 text-sm text-[var(--muted-foreground)]">
-                        Approve an application to create a student profile with a
-                        BB student ID.
+                        Approve an application or add a student manually to see records here.
                       </p>
                     </div>
                   </td>
@@ -118,6 +104,9 @@ export async function StudentsTableBlock({
             )}
           </table>
         </div>
+        <p className="mt-2 text-center text-xs text-[var(--muted-foreground)]">
+          Click a row to open the student profile.
+        </p>
       </section>
     </div>
   );
