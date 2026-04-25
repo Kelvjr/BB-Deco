@@ -3,9 +3,10 @@ import { currentUser } from "@clerk/nextjs/server";
 import {
   fetchApplicationsCached,
   fetchProgramBreakdownCached,
+  fetchProgramsCached,
   fetchStudentsCached,
 } from "@/lib/api";
-import type { StudentRow } from "@/lib/api";
+import type { ProgramRow, StudentRow } from "@/lib/api";
 
 export const dynamic = "force-dynamic";
 
@@ -27,11 +28,12 @@ function streamCounts(students: StudentRow[]) {
 }
 
 export default async function DashboardHomePage() {
-  const [appsResult, studentsResult, programBreakdownResult, user] =
+  const [appsResult, studentsResult, programBreakdownResult, programsResult, user] =
     await Promise.all([
       fetchApplicationsCached(),
       fetchStudentsCached(),
       fetchProgramBreakdownCached(),
+      fetchProgramsCached(),
       currentUser(),
     ]);
 
@@ -39,6 +41,9 @@ export default async function DashboardHomePage() {
   const students = studentsResult.ok ? studentsResult.data : [];
   const programBreakdownFromApi = programBreakdownResult.ok
     ? programBreakdownResult.data
+    : [];
+  const programsCatalog: ProgramRow[] = programsResult.ok
+    ? programsResult.data
     : [];
   const loadError = appsResult.ok ? null : appsResult.error;
 
@@ -50,6 +55,7 @@ export default async function DashboardHomePage() {
       applications={applications}
       students={students}
       programBreakdownFromApi={programBreakdownFromApi}
+      programsCatalog={programsCatalog}
       streamEnrolled={enrolled}
       streamApprenticeship={apprenticeship}
       loadError={loadError}

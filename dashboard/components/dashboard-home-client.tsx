@@ -8,7 +8,12 @@ import {
   Hourglass,
 } from "lucide-react";
 
-import type { ApplicationRow, ProgramBreakdownRow, StudentRow } from "@/lib/api";
+import type {
+  ApplicationRow,
+  ProgramBreakdownRow,
+  ProgramRow,
+  StudentRow,
+} from "@/lib/api";
 import {
   type ChartPeriod,
   type DateRangePeriod,
@@ -47,10 +52,40 @@ function isApproved(s: unknown): boolean {
   return typeof s === "string" && s.trim().toLowerCase() === "approved";
 }
 
+/** Prefer GET /programs (`application_count`); append stats rows for program_applied values not in the catalog. */
+function mergeProgramBreakdown(
+  programsCatalog: ProgramRow[],
+  statsFallback: ProgramBreakdownRow[],
+): ProgramBreakdownRow[] {
+  if (programsCatalog.length === 0) return statsFallback;
+
+  const fromCatalog: ProgramBreakdownRow[] = [];
+  const nameKeys = new Set<string>();
+  for (const p of programsCatalog) {
+    const name = typeof p.name === "string" ? p.name.trim() : "";
+    if (!name) continue;
+    fromCatalog.push({
+      program: name,
+      count: Math.max(0, Number(p.application_count ?? 0)),
+    });
+    nameKeys.add(name.toLowerCase());
+  }
+
+  const extras: ProgramBreakdownRow[] = [];
+  for (const row of statsFallback) {
+    const k = String(row.program ?? "").trim().toLowerCase();
+    if (!k || nameKeys.has(k)) continue;
+    extras.push({ program: row.program, count: row.count });
+  }
+
+  return [...fromCatalog, ...extras].sort((a, b) => b.count - a.count);
+}
+
 export function DashboardHomeClient({
   applications,
   students,
   programBreakdownFromApi,
+  programsCatalog,
   streamEnrolled,
   streamApprenticeship,
   loadError,
@@ -58,8 +93,10 @@ export function DashboardHomeClient({
 }: {
   applications: ApplicationRow[];
   students: StudentRow[];
-  /** From GET /stats/program-breakdown; falls back to client-side aggregation if empty. */
+  /** From GET /stats/program-breakdown; used with client aggregation for non-catalog program names. */
   programBreakdownFromApi: ProgramBreakdownRow[];
+  /** From GET /programs; drives program breakdown and filter options when non-empty. */
+  programsCatalog: ProgramRow[];
   streamEnrolled: number;
   streamApprenticeship: number;
   loadError: string | null;
@@ -83,10 +120,40 @@ export function DashboardHomeClient({
     [applications, chartPeriod],
   );
 
-  const programs = useMemo(() => {
-    if (programBreakdownFromApi.length > 0) return programBreakdownFromApi;
-    return programBreakdown(applications);
-  }, [programBreakdownFromApi, applications]);
+  const statsFallback = useMemo(
+    () =>
+      programBreakdownFromApi.length > 0
+        ? programBreakdownFromApi
+        : programBreakdown(applications),
+    [programBreakdownFromApi, applications],
+  );
+
+  const programs = useMemo(
+    () => mergeProgramBreakdown(programsCatalog, statsFallback),
+    [programsCatalog, statsFallback],
+  );
+
+  const activeProgramsCount = useMemo(
+    () =>
+      programsCatalog.filter(
+        (p) => (String(p.status ?? "active").toLowerCase() || "active") === "active",
+      ).length,
+    [programsCatalog],
+  );
+
+  const programTableOptions = useMemo(
+    () =>
+      programsCatalog
+        .map((p) => (typeof p.name === "string" ? p.name.trim() : ""))
+        .filter(Boolean),
+    [programsCatalog],
+  );
+
+  const programBreakdownDescription = useMemo(() => {
+    if (programsCatalog.length === 0) return undefined;
+    const n = activeProgramsCount;
+    return `Catalog (${n} active program${n === 1 ? "" : "s"}) — counts match application “program” to program name`;
+  }, [programsCatalog.length, activeProgramsCount]);
 
   const activity = useMemo(() => recentActivity(applications, 6), [applications]);
 
@@ -215,7 +282,10 @@ export function DashboardHomeClient({
           />
         </div>
         <div className="lg:col-span-4">
-          <ProgramBreakdownDonut data={programs} />
+          <ProgramBreakdownDonut
+            data={programs}
+            description={programBreakdownDescription}
+          />
         </div>
         <div className="lg:col-span-3">
           <TodayActivity items={activity} />
@@ -223,7 +293,10 @@ export function DashboardHomeClient({
       </section>
 
       <section>
-        <ApplicationsTablePremium rows={applications} />
+        <ApplicationsTablePremium
+          rows={applications}
+          programOptionsFromCatalog={programTableOptions}
+        />
       </section>
     </div>
   );

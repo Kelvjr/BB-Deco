@@ -23,8 +23,11 @@ const PALETTE = [
 
 export function ProgramBreakdownDonut({
   data,
+  description,
 }: {
   data: { program: string; count: number }[];
+  /** Overrides default “Applications per program”. */
+  description?: string;
 }) {
   const total = data.reduce((sum, d) => sum + d.count, 0);
   const top = data.slice(0, 6);
@@ -36,7 +39,9 @@ export function ProgramBreakdownDonut({
     <Card className="h-full">
       <CardHeader>
         <CardTitle>Program breakdown</CardTitle>
-        <CardDescription>Applications per program</CardDescription>
+        <CardDescription>
+          {description ?? "Applications per program"}
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <div className="relative h-[180px] w-full">

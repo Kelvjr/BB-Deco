@@ -57,8 +57,11 @@ function getInitials(name: string): string {
 
 export function ApplicationsTablePremium({
   rows,
+  programOptionsFromCatalog = [],
 }: {
   rows: ApplicationRow[];
+  /** Program names from GET /programs; unioned with values present on applications. */
+  programOptionsFromCatalog?: string[];
 }) {
   const [tab, setTab] = useState<StatusKey>("all");
   const [search, setSearch] = useState("");
@@ -69,9 +72,13 @@ export function ApplicationsTablePremium({
 
   const programs = useMemo(() => {
     const set = new Set<string>();
+    for (const p of programOptionsFromCatalog) {
+      const t = p?.trim();
+      if (t) set.add(t);
+    }
     for (const r of all) if (r.program && r.program !== "—") set.add(r.program);
     return [...set].sort();
-  }, [all]);
+  }, [all, programOptionsFromCatalog]);
 
   const filtered = useMemo(() => {
     let result = all;
