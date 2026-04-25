@@ -1,6 +1,10 @@
 import Link from "next/link";
 import { Plus } from "lucide-react";
-import { fetchProgramsCached } from "@/lib/api";
+import {
+  fetchProgramBreakdownCached,
+  fetchProgramsCached,
+} from "@/lib/api";
+import { buildProgramsList } from "@/lib/programs-list";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -15,15 +19,22 @@ import { WorkspaceShell } from "@/components/workspace-shell";
 export const dynamic = "force-dynamic";
 
 export default async function ProgramsAllPage() {
-  const res = await fetchProgramsCached();
-  const programs = res.ok ? res.data : [];
-  const err = res.ok ? null : res.error;
+  const [programsRes, breakdownRes] = await Promise.all([
+    fetchProgramsCached(),
+    fetchProgramBreakdownCached(),
+  ]);
+  const programs = programsRes.ok ? programsRes.data : [];
+  const breakdown = breakdownRes.ok ? breakdownRes.data : [];
+  const err = !programsRes.ok ? programsRes.error : null;
+  const list = buildProgramsList(programs, breakdown);
 
   return (
-    <WorkspaceShell subtitle="Curriculum, duration, and requirements for every offering.">
+    <WorkspaceShell subtitle="Curriculum, duration, and requirements for every offering. These names match the public apply form.">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <p className="text-sm text-[var(--muted-foreground)]">
-          {err ? "Programs table uses the new schema — run backend migration if empty." : null}
+          {err
+            ? "Could not load programs from the API — catalog names still show; add records when the API is available."
+            : null}
         </p>
         <Button asChild>
           <Link href="/programs/add">
@@ -32,27 +43,27 @@ export default async function ProgramsAllPage() {
           </Link>
         </Button>
       </div>
-      {err ? (
-        <p className="text-sm text-amber-800">{err}</p>
-      ) : programs.length === 0 ? (
-        <Card>
-          <CardContent className="py-12 text-center text-sm text-slate-600">
-            No programs yet. Add one to power forms and reporting.
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="grid gap-4 sm:grid-cols-2">
-          {programs.map((p) => (
-            <Link key={String(p.id)} href={`/programs/${p.id}`}>
+      {err ? <p className="mb-3 text-sm text-amber-800">{err}</p> : null}
+      <div className="grid gap-4 sm:grid-cols-2">
+        {list.map((p) => {
+          const href = p.inDatabase && p.id
+            ? `/programs/${p.id}`
+            : `/programs/add?name=${encodeURIComponent(p.name)}`;
+          return (
+            <Link key={p.inDatabase && p.id ? p.id : `catalog-${p.name}`} href={href}>
               <Card className="h-full transition-shadow hover:shadow-md">
                 <CardHeader>
                   <div className="flex items-start justify-between gap-2">
                     <CardTitle className="text-lg">{p.name}</CardTitle>
-                    <Badge variant="outline">{(p.status as string) || "active"}</Badge>
+                    <div className="flex shrink-0 flex-wrap justify-end gap-1">
+                      {!p.inDatabase ? (
+                        <Badge variant="secondary">Set up in database</Badge>
+                      ) : null}
+                      <Badge variant="outline">{p.status || "active"}</Badge>
+                    </div>
                   </div>
                   <CardDescription>
-                    {p.duration || "Duration TBD"} · {p.application_count ?? 0} applications
-                    matched
+                    {p.duration || "Duration TBD"} · {p.applicationCount} applications matched
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -62,9 +73,9 @@ export default async function ProgramsAllPage() {
                 </CardContent>
               </Card>
             </Link>
-          ))}
-        </div>
-      )}
+          );
+        })}
+      </div>
     </WorkspaceShell>
   );
 }
