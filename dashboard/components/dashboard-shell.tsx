@@ -6,9 +6,11 @@ import { DashboardTopBar } from "@/components/dashboard-top-bar";
 
 export function DashboardShell({
   applicationCount,
+  administratorName,
   children,
 }: {
   applicationCount: number;
+  administratorName: string;
   children: ReactNode;
 }) {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
@@ -34,6 +36,7 @@ export function DashboardShell({
       >
         <DashboardSidebar
           applicationCount={applicationCount}
+          administratorName={administratorName}
           onNavigate={closeMobile}
         />
       </div>

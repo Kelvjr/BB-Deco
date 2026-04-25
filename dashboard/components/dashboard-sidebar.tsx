@@ -4,18 +4,19 @@ import type { ReactNode } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   Archive,
   BarChart3,
   BookOpen,
   CalendarCheck,
-  ChevronLeft,
+  ChevronDown,
   ChevronRight,
   ClipboardList,
   FolderOpen,
-  GraduationCap,
   LayoutDashboard,
+  PanelLeftClose,
+  PanelLeftOpen,
   ScrollText,
   Settings,
   UserCog,
@@ -87,6 +88,83 @@ function NavMain({
         </span>
       ) : null}
     </Link>
+  );
+}
+
+function NavMainCollapsible({
+  href,
+  icon,
+  label,
+  badge,
+  active,
+  collapsed,
+  open,
+  onToggle,
+  onNavigate,
+}: {
+  href: string;
+  icon: ReactNode;
+  label: string;
+  badge?: number;
+  active: boolean;
+  collapsed: boolean;
+  open: boolean;
+  onToggle: () => void;
+  onNavigate?: () => void;
+}) {
+  if (collapsed) {
+    return (
+      <NavMain
+        href={href}
+        icon={icon}
+        label={label}
+        badge={badge}
+        active={active}
+        collapsed
+        onNavigate={onNavigate}
+      />
+    );
+  }
+
+  return (
+    <div
+      className={`group flex w-full items-center gap-1 rounded-[var(--radius-sm)] px-1 py-0.5 transition-colors ${
+        active ? "bg-[rgba(8,151,53,0.08)]" : "hover:bg-[var(--muted)]"
+      }`}
+    >
+      <Link
+        href={href}
+        onClick={onNavigate}
+        className="flex min-w-0 flex-1 items-center gap-2.5 rounded-[var(--radius-sm)] px-1.5 py-1.5 text-[13px] font-medium text-[var(--foreground)]"
+      >
+        <span
+          className={`flex size-[18px] shrink-0 items-center justify-center [&_svg]:size-[18px] ${
+            active ? "text-[var(--bb-primary)]" : "text-[var(--muted-foreground)]"
+          }`}
+        >
+          {icon}
+        </span>
+        <span className="truncate">{label}</span>
+        {typeof badge === "number" ? (
+          <span className="ml-auto shrink-0 rounded-md bg-[var(--bb-primary)] px-1.5 py-0.5 text-[10px] font-semibold leading-none text-white tabular-nums">
+            {badge}
+          </span>
+        ) : null}
+      </Link>
+      <button
+        type="button"
+        onClick={onToggle}
+        className="flex size-7 shrink-0 items-center justify-center rounded-md text-[var(--muted-foreground)] transition-colors hover:bg-white hover:text-[var(--foreground)]"
+        aria-expanded={open}
+        aria-label={`Toggle ${label} submenu`}
+      >
+        {open ? (
+          <ChevronDown className="size-4" strokeWidth={1.75} />
+        ) : (
+          <ChevronRight className="size-4" strokeWidth={1.75} />
+        )}
+      </button>
+    </div>
   );
 }
 
@@ -164,22 +242,24 @@ function SubStack({ children }: { children: ReactNode }) {
 
 export function DashboardSidebar({
   applicationCount,
+  administratorName,
   onNavigate,
 }: {
   applicationCount: number;
+  administratorName: string;
   onNavigate?: () => void;
 }) {
   const pathname = usePathname();
-  const [collapsed, setCollapsed] = useState(false);
-
-  useEffect(() => {
+  const [collapsed, setCollapsed] = useState(() => {
+    if (typeof window === "undefined") return false;
     try {
-      const v = localStorage.getItem(COLLAPSE_KEY);
-      if (v === "1") setCollapsed(true);
+      return localStorage.getItem(COLLAPSE_KEY) === "1";
     } catch {
-      /* ignore */
+      return false;
     }
-  }, []);
+  });
+  const [applicationsOpen, setApplicationsOpen] = useState(true);
+  const [studentsOpen, setStudentsOpen] = useState(true);
 
   const toggleCollapse = () => {
     setCollapsed((c) => {
@@ -196,8 +276,10 @@ export function DashboardSidebar({
   const dash = pathname === "/";
   const apps = pathname.startsWith("/applications");
   const students = pathname.startsWith("/students");
+  const showApplicationsSubmenu = !collapsed && (applicationsOpen || apps);
+  const showStudentsSubmenu = !collapsed && (studentsOpen || students);
 
-  const w = collapsed ? "w-[4.5rem]" : "w-[15.5rem]";
+  const w = collapsed ? "w-[4.5rem]" : "w-[14rem] xl:w-[15.5rem]";
 
   return (
     <aside
@@ -207,7 +289,7 @@ export function DashboardSidebar({
         <Link
           href="/"
           onClick={onNavigate}
-          className={`flex min-w-0 flex-1 items-center gap-2.5 transition-opacity hover:opacity-90 ${collapsed ? "justify-center px-2" : "px-3"}`}
+          className={`flex min-w-0 flex-1 items-center gap-2.5 transition-opacity hover:opacity-90 ${collapsed ? "justify-center px-2" : "pl-3 pr-2"}`}
         >
           <Image
             src="/logo.svg"
@@ -222,16 +304,23 @@ export function DashboardSidebar({
               <span className="min-w-0 truncate text-[15px] font-semibold tracking-tight text-slate-900">
                 BB Deco
               </span>
-              <span
-                className="ml-auto flex size-8 shrink-0 items-center justify-center rounded-[var(--radius-sm)] bg-[rgba(8,151,53,0.1)] text-[var(--bb-primary)]"
-                aria-hidden
-              >
-                <GraduationCap className="size-[18px]" strokeWidth={1.75} />
-              </span>
             </>
           ) : null}
           <span className="sr-only">BB Deco — home</span>
         </Link>
+        <button
+          type="button"
+          onClick={toggleCollapse}
+          className="mr-2 flex size-8 shrink-0 items-center justify-center self-center rounded-[var(--radius-sm)] text-[var(--muted-foreground)] transition-colors hover:bg-[var(--muted)] hover:text-[var(--foreground)]"
+          aria-expanded={!collapsed}
+          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+        >
+          {collapsed ? (
+            <PanelLeftOpen className="size-4" strokeWidth={1.75} />
+          ) : (
+            <PanelLeftClose className="size-4" strokeWidth={1.75} />
+          )}
+        </button>
       </div>
 
       <nav className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-2 py-3">
@@ -245,16 +334,18 @@ export function DashboardSidebar({
             collapsed={collapsed}
             onNavigate={onNavigate}
           />
-          <NavMain
+          <NavMainCollapsible
             href="/applications/all"
             icon={<ClipboardList strokeWidth={1.75} />}
             label="Applications"
             badge={applicationCount}
             active={apps}
             collapsed={collapsed}
+            open={applicationsOpen}
+            onToggle={() => setApplicationsOpen((v) => !v)}
             onNavigate={onNavigate}
           />
-          {!collapsed ? (
+          {showApplicationsSubmenu ? (
             <SubStack>
               <NavSub
                 href="/applications/all"
@@ -288,15 +379,17 @@ export function DashboardSidebar({
           ) : null}
 
           <SectionLabel collapsed={collapsed}>People</SectionLabel>
-          <NavMain
+          <NavMainCollapsible
             href="/students/all"
             icon={<Users strokeWidth={1.75} />}
             label="Students"
             active={students}
             collapsed={collapsed}
+            open={studentsOpen}
+            onToggle={() => setStudentsOpen((v) => !v)}
             onNavigate={onNavigate}
           />
-          {!collapsed ? (
+          {showStudentsSubmenu ? (
             <SubStack>
               <NavSub
                 href="/students/all"
@@ -395,24 +488,6 @@ export function DashboardSidebar({
         </div>
       </nav>
 
-      <div className="hidden shrink-0 border-t border-[var(--border)] p-2 md:block">
-        <button
-          type="button"
-          onClick={toggleCollapse}
-          className="flex w-full items-center justify-center gap-2 rounded-[var(--radius-sm)] py-2 text-xs font-medium text-[var(--muted-foreground)] transition-colors hover:bg-[var(--muted)] hover:text-[var(--foreground)]"
-          aria-expanded={!collapsed}
-        >
-          {collapsed ? (
-            <ChevronRight className="size-4" strokeWidth={1.75} />
-          ) : (
-            <>
-              <ChevronLeft className="size-4" strokeWidth={1.75} />
-              <span>Collapse</span>
-            </>
-          )}
-        </button>
-      </div>
-
       <div className="shrink-0 border-t border-[var(--border)] p-3">
         <div className="flex items-center gap-2.5">
           <div
@@ -424,7 +499,7 @@ export function DashboardSidebar({
           {!collapsed ? (
             <div className="min-w-0 flex-1 leading-tight">
               <span className="block truncate text-[12px] font-semibold text-[var(--foreground)]">
-                Staff account
+                {administratorName}
               </span>
               <span className="block truncate text-[11px] text-[var(--muted-foreground)]">
                 Administrator
