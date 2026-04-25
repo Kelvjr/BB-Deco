@@ -1,123 +1,239 @@
 "use client";
 
 import { UserButton } from "@clerk/nextjs";
-import { usePathname, useRouter } from "next/navigation";
-import { useCallback, useState } from "react";
-import { Bell, PanelLeft, Search } from "lucide-react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { useState } from "react";
+import {
+  Bell,
+  ChevronRight,
+  Megaphone,
+  PanelLeft,
+  Plus,
+  Search,
+  UserPlus,
+} from "lucide-react";
 
-function titleForPath(pathname: string): string {
-  if (pathname === "/") return "Dashboard";
-  const map: Record<string, string> = {
-    "/applications/all": "Applications",
-    "/applications/approved": "Approved applications",
-    "/applications/pending": "Pending applications",
-    "/applications/rejected": "Rejected applications",
-    "/students/all": "Students",
-    "/students/enrolled": "Enrolled students",
-    "/students/apprenticeships": "Apprenticeships",
-    "/students/graduated": "Graduated students",
-    "/teachers-staff": "Teachers & staff",
-    "/classes-courses": "Classes & courses",
-    "/attendance": "Attendance",
-    "/payments": "Payments",
-    "/documents": "Documents",
-    "/reports-analytics": "Reports & analytics",
-    "/activity-logs": "Activity logs",
-    "/archives": "Archives",
-    "/settings": "Settings",
-  };
-  if (map[pathname]) return map[pathname];
-  const appDetail = pathname.match(/^\/applications\/([^/]+)$/);
-  if (appDetail && appDetail[1] && appDetail[1] !== "all") {
-    return "Application details";
-  }
-  return "BB Deco";
-}
+import { cn } from "@/lib/utils";
+import { findGroupForPath, findLeafForPath, titleForPath } from "@/lib/nav";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  GlobalCommandPalette,
+  useCommandPalette,
+} from "@/components/global-command-palette";
 
 export function DashboardTopBar({
+  applicationCount,
   onMenuClick,
 }: {
+  applicationCount: number;
   onMenuClick?: () => void;
 }) {
   const pathname = usePathname();
-  const router = useRouter();
-  const title = titleForPath(pathname);
-  const [searchQ, setSearchQ] = useState("");
+  const palette = useCommandPalette();
+  const [notifOpen, setNotifOpen] = useState(false);
 
-  const onSearchSubmit = useCallback(
-    (e: React.FormEvent) => {
-      e.preventDefault();
-      const q = searchQ.trim();
-      if (q) {
-        router.push(`/applications/all?q=${encodeURIComponent(q)}`);
-      } else {
-        router.push("/applications/all");
-      }
-    },
-    [router, searchQ],
-  );
+  const group = findGroupForPath(pathname);
+  const leaf = findLeafForPath(pathname);
+
+  const sectionLabel = group?.label ?? "Dashboard";
+  const pageLabel = leaf?.label ?? titleForPath(pathname);
+  const sectionHref = group?.rootHref ?? "/";
 
   return (
-    <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center justify-between gap-4 border-b border-slate-200/80 bg-white px-4 md:h-[3.75rem] md:px-8">
-      <div className="flex min-w-0 items-center gap-3">
-        <button
-          type="button"
+    <>
+      <header
+        className={cn(
+          "sticky top-0 z-30 flex h-16 shrink-0 items-center gap-3 border-b border-slate-200 bg-white/80 px-4 backdrop-blur supports-[backdrop-filter]:bg-white/70 md:px-6",
+        )}
+      >
+        <Button
+          variant="ghost"
+          size="icon"
           onClick={onMenuClick}
-          className="flex size-9 shrink-0 items-center justify-center rounded-[var(--radius-sm)] text-slate-500 transition-colors hover:bg-slate-100 md:hidden"
+          className="md:hidden"
           aria-label="Open menu"
         >
           <PanelLeft className="size-5" strokeWidth={1.75} />
-        </button>
-        <h1 className="truncate text-lg font-semibold tracking-tight text-slate-900 md:text-xl">
-          {title}
-        </h1>
-      </div>
+        </Button>
 
-      <div className="flex min-w-0 shrink-0 items-center gap-2 md:gap-3">
-        <form
-          onSubmit={onSearchSubmit}
-          className="min-w-0 flex-1 max-w-[11rem] sm:max-w-xs md:max-w-sm"
+        <nav
+          aria-label="Breadcrumb"
+          className="flex min-w-0 items-center gap-1.5"
         >
-          <div className="relative">
-            <Search
-              className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400"
-              strokeWidth={1.75}
-            />
-            <input
-              type="search"
-              name="q"
-              placeholder="Search applications"
-              value={searchQ}
-              onChange={(e) => setSearchQ(e.target.value)}
-              className="w-full rounded-[var(--radius-sm)] border border-slate-200 bg-white py-2 pl-10 pr-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-[var(--bb-primary)] focus:outline-none focus:ring-2 focus:ring-[rgba(8,151,53,0.2)]"
-              aria-label="Search applications"
+          <Link
+            href={sectionHref}
+            className="hidden truncate text-sm font-medium text-slate-500 transition-colors hover:text-slate-900 sm:inline"
+          >
+            {sectionLabel}
+          </Link>
+          {pageLabel !== sectionLabel ? (
+            <>
+              <ChevronRight
+                className="hidden size-3.5 text-slate-300 sm:inline"
+                strokeWidth={2}
+              />
+              <h1 className="truncate text-[15px] font-semibold tracking-tight text-slate-900">
+                {pageLabel}
+              </h1>
+            </>
+          ) : (
+            <h1 className="truncate text-[15px] font-semibold tracking-tight text-slate-900 sm:hidden">
+              {pageLabel}
+            </h1>
+          )}
+        </nav>
+
+        <div className="ml-auto flex items-center gap-1.5 md:gap-2">
+          <button
+            type="button"
+            onClick={() => palette.setOpen(true)}
+            className="hidden h-9 w-[280px] items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 text-left text-sm text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-700 lg:inline-flex xl:w-[340px]"
+          >
+            <Search className="size-4" strokeWidth={1.75} />
+            <span className="flex-1 truncate">Search anywhere…</span>
+            <kbd className="hidden items-center gap-1 rounded-md border border-slate-200 bg-white px-1.5 py-0.5 font-mono text-[10px] font-medium text-slate-500 xl:inline-flex">
+              <span>⌘</span>K
+            </kbd>
+          </button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => palette.setOpen(true)}
+            className="lg:hidden"
+            aria-label="Search"
+          >
+            <Search className="size-[18px]" strokeWidth={1.75} />
+          </Button>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="default"
+                size="sm"
+                className="h-9 px-3 text-[13px]"
+              >
+                <Plus className="size-4" strokeWidth={2} />
+                <span className="hidden sm:inline">Create</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuLabel>Create new</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem asChild>
+                <Link href="/students/add">
+                  <UserPlus />
+                  Add Student
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href="/programs/add">
+                  <Plus />
+                  Create Program
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href="/communications/announcements">
+                  <Megaphone />
+                  Send Announcement
+                </Link>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          <Popover open={notifOpen} onOpenChange={setNotifOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="relative"
+                aria-label="Notifications"
+              >
+                <Bell className="size-[18px]" strokeWidth={1.75} />
+                {applicationCount > 0 ? (
+                  <span className="absolute right-2 top-2 size-2 rounded-full bg-[var(--bb-accent)] ring-2 ring-white" />
+                ) : null}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent align="end" className="w-80 p-0">
+              <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3">
+                <div>
+                  <div className="text-sm font-semibold text-slate-900">
+                    Notifications
+                  </div>
+                  <div className="text-xs text-slate-500">
+                    Updates on admissions activity
+                  </div>
+                </div>
+                <Badge variant="soft">{applicationCount}</Badge>
+              </div>
+              <div className="max-h-[320px] overflow-y-auto">
+                {applicationCount > 0 ? (
+                  <Link
+                    href="/admissions/pending"
+                    onClick={() => setNotifOpen(false)}
+                    className="flex items-start gap-3 border-b border-slate-100 px-4 py-3 transition-colors hover:bg-slate-50"
+                  >
+                    <span className="mt-1 flex size-8 shrink-0 items-center justify-center rounded-full bg-[rgba(8,151,53,0.10)] text-[var(--bb-primary)]">
+                      <Bell className="size-4" strokeWidth={1.75} />
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <div className="text-sm font-medium text-slate-900">
+                        {applicationCount} application
+                        {applicationCount === 1 ? "" : "s"} to review
+                      </div>
+                      <div className="mt-0.5 text-xs text-slate-500">
+                        Open the admissions queue to triage submissions.
+                      </div>
+                    </div>
+                  </Link>
+                ) : (
+                  <div className="px-4 py-10 text-center">
+                    <div className="mx-auto flex size-10 items-center justify-center rounded-full bg-slate-100 text-slate-400">
+                      <Bell className="size-5" strokeWidth={1.5} />
+                    </div>
+                    <div className="mt-3 text-sm font-medium text-slate-700">
+                      You&rsquo;re all caught up
+                    </div>
+                    <div className="mt-1 text-xs text-slate-500">
+                      We&rsquo;ll alert you when something needs attention.
+                    </div>
+                  </div>
+                )}
+              </div>
+            </PopoverContent>
+          </Popover>
+
+          <div className="ml-1 flex items-center">
+            <UserButton
+              appearance={{
+                elements: {
+                  avatarBox: "size-8 ring-1 ring-slate-200",
+                },
+              }}
             />
           </div>
-        </form>
-
-        <div className="h-8 w-px shrink-0 bg-slate-200" aria-hidden />
-
-        <button
-          type="button"
-          className="relative flex size-9 shrink-0 items-center justify-center rounded-[var(--radius-sm)] text-slate-500 transition-colors hover:bg-slate-100"
-          aria-label="Notifications"
-        >
-          <Bell className="size-[18px]" strokeWidth={1.75} />
-          <span className="absolute right-1.5 top-1.5 size-2 rounded-full bg-[var(--bb-accent)] ring-2 ring-white" />
-        </button>
-
-        <div className="flex shrink-0 items-center pl-1">
-          <UserButton
-            appearance={{
-              elements: {
-                avatarBox: "size-9 border border-slate-200",
-                userButtonPopoverCard:
-                  "rounded-[var(--radius)] border border-slate-200 shadow-lg",
-              },
-            }}
-          />
         </div>
-      </div>
-    </header>
+      </header>
+
+      <GlobalCommandPalette
+        open={palette.open}
+        onOpenChange={palette.setOpen}
+      />
+    </>
   );
 }

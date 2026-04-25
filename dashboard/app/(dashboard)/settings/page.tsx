@@ -1,7 +1,5 @@
-import { WorkspaceShell } from "@/components/workspace-shell";
+import { redirect } from "next/navigation";
 
-export default function SettingsPage() {
-  return (
-    <WorkspaceShell subtitle="School profile, integrations, and preferences." />
-  );
+export default function SettingsIndex() {
+  redirect("/settings/account");
 }

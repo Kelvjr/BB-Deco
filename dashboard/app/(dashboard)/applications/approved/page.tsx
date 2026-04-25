@@ -1,16 +1,5 @@
-import { ApplicationsTableBlock } from "@/components/applications-table-block";
-import { WorkspaceShell } from "@/components/workspace-shell";
+import { redirect } from "next/navigation";
 
-export const dynamic = "force-dynamic";
-
-export default function ApplicationsApprovedPage() {
-  return (
-    <WorkspaceShell subtitle="Applications marked approved.">
-      <ApplicationsTableBlock
-        title="Approved"
-        description="Applications marked approved in the database."
-        statusFilter="approved"
-      />
-    </WorkspaceShell>
-  );
+export default function ApplicationsApprovedRedirect() {
+  redirect("/admissions/approved");
 }

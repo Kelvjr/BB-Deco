@@ -8,16 +8,24 @@ export default async function DashboardGroupLayout({
 }: {
   children: ReactNode;
 }) {
-  const [result, user] = await Promise.all([fetchApplicationsCached(), currentUser()]);
+  const [result, user] = await Promise.all([
+    fetchApplicationsCached(),
+    currentUser(),
+  ]);
+
   const applicationCount = result.ok ? result.data.length : 0;
-  const administratorName =
-    user?.fullName?.trim() || user?.firstName?.trim() || "Administrator";
+
+  const profile = {
+    name:
+      user?.fullName?.trim() ||
+      user?.firstName?.trim() ||
+      "Administrator",
+    email: user?.primaryEmailAddress?.emailAddress ?? null,
+    imageUrl: user?.imageUrl ?? null,
+  };
 
   return (
-    <DashboardShell
-      applicationCount={applicationCount}
-      administratorName={administratorName}
-    >
+    <DashboardShell applicationCount={applicationCount} profile={profile}>
       {children}
     </DashboardShell>
   );

@@ -1,16 +1,5 @@
-import { ApplicationsTableBlock } from "@/components/applications-table-block";
-import { WorkspaceShell } from "@/components/workspace-shell";
+import { redirect } from "next/navigation";
 
-export const dynamic = "force-dynamic";
-
-export default function ApplicationsPendingPage() {
-  return (
-    <WorkspaceShell subtitle="Awaiting your review.">
-      <ApplicationsTableBlock
-        title="Pending review"
-        description="New submissions default to pending until you change status."
-        statusFilter="pending"
-      />
-    </WorkspaceShell>
-  );
+export default function ApplicationsPendingRedirect() {
+  redirect("/admissions/pending");
 }

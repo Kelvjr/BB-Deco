@@ -1,48 +1,56 @@
 "use client";
 
 import { useCallback, useState, type ReactNode } from "react";
-import { DashboardSidebar } from "@/components/dashboard-sidebar";
+import {
+  DashboardSidebar,
+  type AdminProfile,
+} from "@/components/dashboard-sidebar";
 import { DashboardTopBar } from "@/components/dashboard-top-bar";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+} from "@/components/ui/sheet";
 
 export function DashboardShell({
   applicationCount,
-  administratorName,
+  profile,
   children,
 }: {
   applicationCount: number;
-  administratorName: string;
+  profile: AdminProfile;
   children: ReactNode;
 }) {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
-
   const closeMobile = useCallback(() => setMobileNavOpen(false), []);
+  const openMobile = useCallback(() => setMobileNavOpen(true), []);
 
   return (
     <div className="flex h-[100dvh] overflow-hidden bg-[var(--page-bg)] text-[var(--foreground)]">
-      {/* Mobile overlay */}
-      {mobileNavOpen ? (
-        <button
-          type="button"
-          className="fixed inset-0 z-40 bg-black/40 backdrop-blur-[2px] md:hidden"
-          aria-label="Close menu"
-          onClick={closeMobile}
-        />
-      ) : null}
-
-      <div
-        className={`fixed inset-y-0 left-0 z-50 w-[min(17rem,92vw)] max-w-full transform transition-transform duration-200 ease-out md:static md:z-auto md:flex md:w-auto md:translate-x-0 ${
-          mobileNavOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
-        }`}
-      >
-        <DashboardSidebar
-          applicationCount={applicationCount}
-          administratorName={administratorName}
-          onNavigate={closeMobile}
-        />
+      <div className="hidden md:flex">
+        <DashboardSidebar profile={profile} onNavigate={closeMobile} />
       </div>
 
+      <Sheet open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
+        <SheetContent
+          side="left"
+          className="w-[280px] max-w-[85vw] p-0"
+        >
+          <SheetHeader className="sr-only">
+            <SheetTitle>Navigation</SheetTitle>
+            <SheetDescription>Browse the dashboard</SheetDescription>
+          </SheetHeader>
+          <DashboardSidebar profile={profile} onNavigate={closeMobile} />
+        </SheetContent>
+      </Sheet>
+
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-        <DashboardTopBar onMenuClick={() => setMobileNavOpen(true)} />
+        <DashboardTopBar
+          applicationCount={applicationCount}
+          onMenuClick={openMobile}
+        />
         <div className="min-h-0 flex-1 overflow-y-auto">{children}</div>
       </div>
     </div>

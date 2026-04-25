@@ -1,16 +1,5 @@
-import { ApplicationsTableBlock } from "@/components/applications-table-block";
-import { WorkspaceShell } from "@/components/workspace-shell";
+import { redirect } from "next/navigation";
 
-export const dynamic = "force-dynamic";
-
-export default function ApplicationsRejectedPage() {
-  return (
-    <WorkspaceShell subtitle="Applications not admitted.">
-      <ApplicationsTableBlock
-        title="Rejected"
-        description="Applications not admitted."
-        statusFilter="rejected"
-      />
-    </WorkspaceShell>
-  );
+export default function ApplicationsRejectedRedirect() {
+  redirect("/admissions/rejected");
 }
