@@ -8,7 +8,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
-export function AddStudentForm() {
+export function AddStudentForm({
+  defaultAdmissionType = "enrolled",
+}: {
+  defaultAdmissionType?: "enrolled" | "apprenticeship";
+}) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
@@ -17,7 +21,7 @@ export function AddStudentForm() {
   const [phone, setPhone] = useState("");
   const [program, setProgram] = useState("");
   const [admissionType, setAdmissionType] = useState<"enrolled" | "apprenticeship">(
-    "enrolled",
+    defaultAdmissionType,
   );
 
   async function onSubmit(e: React.FormEvent) {

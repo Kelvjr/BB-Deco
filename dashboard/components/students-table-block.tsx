@@ -1,5 +1,7 @@
+import Link from "next/link";
 import { Users } from "lucide-react";
 import { StudentsTableBody } from "@/components/students-table-body";
+import { Button } from "@/components/ui/button";
 import {
   fetchStudentsCached,
   studentTableRows,
@@ -22,11 +24,15 @@ export async function StudentsTableBlock({
   title,
   description,
   admissionMode = "all",
+  emptyActionHref,
+  emptyActionLabel,
 }: {
   title: string;
   description: string;
   /** Subset: enrolled = non-apprenticeship stream, apprenticeship = government stream. */
   admissionMode?: "all" | "enrolled" | "apprenticeship";
+  emptyActionHref?: string;
+  emptyActionLabel?: string;
 }) {
   const result = await fetchStudentsCached();
   const allStudents = result.ok ? result.data : [];
@@ -95,6 +101,11 @@ export async function StudentsTableBlock({
                       <p className="mt-2 text-sm text-[var(--muted-foreground)]">
                         Approve an application or add a student manually to see records here.
                       </p>
+                      {emptyActionHref && emptyActionLabel ? (
+                        <Button asChild className="mt-5">
+                          <Link href={emptyActionHref}>{emptyActionLabel}</Link>
+                        </Button>
+                      ) : null}
                     </div>
                   </td>
                 </tr>

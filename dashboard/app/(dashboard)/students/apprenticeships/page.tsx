@@ -10,6 +10,8 @@ export default function ApprenticeshipsPage() {
         title="Apprenticeship students"
         description="Set admission type to “Apprenticeship” when adding a student or extend the apply form later."
         admissionMode="apprenticeship"
+        emptyActionHref="/students/add?admission=apprenticeship"
+        emptyActionLabel="Create Student"
       />
     </WorkspaceShell>
   );
