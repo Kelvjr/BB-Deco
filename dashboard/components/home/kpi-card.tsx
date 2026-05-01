@@ -59,7 +59,7 @@ export function KpiCard({
   return (
     <Link href={href} className="group block">
       <Card className="gap-0 overflow-hidden p-0 transition-all hover:-translate-y-0.5 hover:shadow-md">
-        <div className="flex items-start justify-between p-5">
+        <div className="flex items-start justify-between gap-2 p-4 xl:p-5">
           <div className="min-w-0">
             <p className="text-[11px] font-medium uppercase tracking-wide text-slate-500">
               {label}
@@ -67,7 +67,7 @@ export function KpiCard({
             <p className="mt-2 text-3xl font-semibold tabular-nums tracking-tight text-slate-900">
               {value.toLocaleString()}
             </p>
-            <div className="mt-2 flex items-center gap-1.5">
+            <div className="mt-2 flex flex-wrap items-center gap-1.5">
               <span
                 className={cn(
                   "inline-flex items-center gap-0.5 rounded-md px-1.5 py-0.5 text-[11px] font-semibold",

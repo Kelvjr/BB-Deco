@@ -7,7 +7,6 @@ import { useMemo, useState } from "react";
 import {
   ChevronDown,
   PanelLeftClose,
-  PanelLeftOpen,
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -270,11 +269,28 @@ function BrandRow({
         collapsed ? "justify-center px-2" : "justify-between pl-4 pr-2",
       )}
     >
-      <Link
-        href="/"
-        onClick={onNavigate}
-        className="flex min-w-0 items-center gap-2.5 transition-opacity hover:opacity-90"
-      >
+      {collapsed ? (
+        <button
+          type="button"
+          onClick={onToggle}
+          className="flex min-w-0 items-center gap-2.5 rounded-lg transition-opacity hover:opacity-90"
+          aria-label="Expand sidebar"
+        >
+          <Image
+            src="/logo.svg"
+            alt="BB Deco"
+            width={32}
+            height={32}
+            className="h-8 w-8 shrink-0 object-contain"
+            priority
+          />
+        </button>
+      ) : (
+        <Link
+          href="/"
+          onClick={onNavigate}
+          className="flex min-w-0 items-center gap-2.5 transition-opacity hover:opacity-90"
+        >
         <Image
           src="/logo.svg"
           alt="BB Deco"
@@ -283,12 +299,11 @@ function BrandRow({
           className="h-8 w-8 shrink-0 object-contain"
           priority
         />
-        {!collapsed ? (
           <span className="min-w-0 truncate text-[15px] font-semibold tracking-tight text-slate-900">
             BB Deco
           </span>
-        ) : null}
-      </Link>
+        </Link>
+      )}
       {!collapsed ? (
         <Button
           variant="ghost"
@@ -301,19 +316,6 @@ function BrandRow({
         </Button>
       ) : null}
     </div>
-  );
-}
-
-function ExpandFloatingButton({ onToggle }: { onToggle: () => void }) {
-  return (
-    <button
-      type="button"
-      onClick={onToggle}
-      className="absolute -right-3 top-20 z-20 hidden size-6 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 shadow-sm transition-colors hover:bg-slate-50 hover:text-slate-900 md:flex"
-      aria-label="Expand sidebar"
-    >
-      <PanelLeftOpen className="size-3.5" strokeWidth={2} />
-    </button>
   );
 }
 
@@ -419,8 +421,6 @@ export function DashboardSidebar({
           onToggle={toggleCollapse}
           onNavigate={onNavigate}
         />
-
-        {collapsed ? <ExpandFloatingButton onToggle={toggleCollapse} /> : null}
 
         <ScrollArea
           className="min-h-0 flex-1 overscroll-y-contain"
