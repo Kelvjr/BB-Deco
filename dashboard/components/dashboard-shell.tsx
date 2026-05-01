@@ -29,14 +29,14 @@ export function DashboardShell({
 
   return (
     <div className="flex h-[100dvh] overflow-hidden bg-[var(--page-bg)] text-[var(--foreground)]">
-      <div className="hidden h-full min-h-0 shrink-0 md:flex">
+      <div className="hidden h-full min-h-0 shrink-0 lg:flex">
         <DashboardSidebar profile={profile} onNavigate={closeMobile} />
       </div>
 
       <Sheet open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
         <SheetContent
           side="left"
-          className="w-[280px] max-w-[85vw] p-0"
+          className="w-[280px] max-w-[85vw] p-0 sm:w-[320px]"
         >
           <SheetHeader className="sr-only">
             <SheetTitle>Navigation</SheetTitle>

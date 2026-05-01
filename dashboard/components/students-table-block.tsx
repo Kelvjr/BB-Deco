@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Users } from "lucide-react";
 import { StudentsTableBody } from "@/components/students-table-body";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import {
   fetchStudentsCached,
   studentTableRows,
@@ -52,7 +53,7 @@ export async function StudentsTableBlock({
         </div>
       ) : null}
 
-      <section className="rounded-[var(--radius)] border border-[var(--border)] bg-[var(--card)] p-5 shadow-[var(--card-shadow)]">
+      <section className="rounded-[var(--radius)] border border-[var(--border)] bg-[var(--card)] p-4 shadow-[var(--card-shadow)] sm:p-5">
         <div>
           <h2 className="text-lg font-semibold tracking-tight text-[var(--foreground)]">
             {title}
@@ -63,7 +64,12 @@ export async function StudentsTableBlock({
         </div>
 
         <div className="mt-5 overflow-x-auto rounded-[var(--radius-sm)] border border-[var(--border)]">
-          <table className="w-full min-w-[56rem] text-left">
+          <table
+            className={cn(
+              "w-full text-left",
+              rows.length > 0 || loadError ? "min-w-[56rem]" : "min-w-0",
+            )}
+          >
             <thead className="bg-[var(--muted)]/80 text-xs font-semibold uppercase tracking-wide text-[var(--muted-foreground)]">
               <tr>
                 <th className="px-4 py-3">Student ID</th>
@@ -90,7 +96,7 @@ export async function StudentsTableBlock({
             ) : rows.length === 0 ? (
               <tbody>
                 <tr className="border-t border-[var(--border)]">
-                  <td colSpan={8} className="px-4 py-16 text-center">
+                  <td colSpan={8} className="px-4 py-12 text-center sm:py-16">
                     <div className="mx-auto flex max-w-sm flex-col items-center">
                       <div className="flex size-14 items-center justify-center rounded-full bg-[var(--muted)] text-[var(--muted-foreground)]">
                         <Users className="size-7" strokeWidth={1.5} />
@@ -102,7 +108,7 @@ export async function StudentsTableBlock({
                         Approve an application or add a student manually to see records here.
                       </p>
                       {emptyActionHref && emptyActionLabel ? (
-                        <Button asChild className="mt-5">
+                        <Button asChild className="mt-5 w-full sm:w-auto">
                           <Link href={emptyActionHref}>{emptyActionLabel}</Link>
                         </Button>
                       ) : null}

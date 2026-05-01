@@ -65,7 +65,7 @@ export function DashboardTopBar({
           variant="ghost"
           size="icon"
           onClick={onMenuClick}
-          className="md:hidden"
+          className="lg:hidden"
           aria-label="Open menu"
         >
           <PanelLeft className="size-5" strokeWidth={1.75} />

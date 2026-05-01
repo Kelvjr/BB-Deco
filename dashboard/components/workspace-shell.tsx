@@ -9,7 +9,7 @@ export function WorkspaceShell({
   children?: ReactNode;
 }) {
   return (
-    <div className="mx-auto max-w-6xl space-y-6 px-4 py-8 md:px-8 md:py-10">
+    <div className="mx-auto w-full max-w-6xl space-y-5 px-4 py-6 sm:space-y-6 md:px-6 md:py-8 xl:px-8 xl:py-10">
       {subtitle ? (
         <p className="text-sm text-[var(--muted-foreground)]">{subtitle}</p>
       ) : null}
