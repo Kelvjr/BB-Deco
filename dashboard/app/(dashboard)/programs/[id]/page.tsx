@@ -11,6 +11,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { WorkspaceShell } from "@/components/workspace-shell";
+import { formatDashboardDate } from "@/lib/date-format";
 
 export const dynamic = "force-dynamic";
 
@@ -73,6 +74,29 @@ export default async function ProgramDetailPage({
             <pre className="max-h-64 overflow-auto rounded-lg bg-slate-50 p-4 text-xs text-slate-800">
               {JSON.stringify(p.curriculum ?? [], null, 2)}
             </pre>
+          </CardContent>
+        </Card>
+        <Card className="md:col-span-2">
+          <CardHeader>
+            <CardTitle className="text-base">Program dates</CardTitle>
+          </CardHeader>
+          <CardContent className="grid gap-3 text-sm sm:grid-cols-2">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                Created
+              </p>
+              <p className="mt-1 text-slate-900">
+                {formatDashboardDate(p.created_at)}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                Last updated
+              </p>
+              <p className="mt-1 text-slate-900">
+                {formatDashboardDate(p.updated_at)}
+              </p>
+            </div>
           </CardContent>
         </Card>
       </div>

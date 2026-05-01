@@ -1,7 +1,5 @@
-import { WorkspaceShell } from "@/components/workspace-shell";
+import { redirect } from "next/navigation";
 
 export default function StudentsGraduatedPage() {
-  return (
-    <WorkspaceShell subtitle="Alumni who completed their program." />
-  );
+  redirect("/students/alumni");
 }

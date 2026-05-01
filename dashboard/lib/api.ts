@@ -1,5 +1,6 @@
 import { cache } from "react";
 import { getBackendBaseUrl } from "./backend-url";
+import { formatDashboardDate } from "./date-format";
 
 export type ApplicationRow = {
   id?: number | string;
@@ -163,8 +164,7 @@ function formatSubmittedAt(row: ApplicationRow): string {
     (typeof row.inserted_at === "string" && row.inserted_at) ||
     "";
   if (!raw) return "—";
-  const d = new Date(raw);
-  return Number.isNaN(d.getTime()) ? raw : d.toLocaleString();
+  return formatDashboardDate(raw);
 }
 
 /** Stable string for URLs (integer, bigint string, uuid, etc.). */
@@ -218,6 +218,8 @@ export type StudentRow = {
   full_name?: string | null;
   email?: string | null;
   phone?: string | null;
+  guardian_name?: string | null;
+  guardian_phone?: string | null;
   program_applied?: string | null;
   /** enrolled | apprenticeship */
   admission_type?: string | null;
@@ -225,6 +227,7 @@ export type StudentRow = {
   profile_image?: string | null;
   notes?: string | null;
   created_at?: string | null;
+  expected_completion_date?: string | null;
   [key: string]: unknown;
 };
 

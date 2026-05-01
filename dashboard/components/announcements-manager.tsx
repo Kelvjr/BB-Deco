@@ -14,6 +14,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import { formatDashboardDate } from "@/lib/date-format";
 
 type Announcement = {
   id?: string;
@@ -135,6 +136,9 @@ export function AnnouncementsManager() {
                   </div>
                   <CardDescription className="line-clamp-2 text-xs">
                     {a.body}
+                  </CardDescription>
+                  <CardDescription className="text-[11px]">
+                    {formatDashboardDate(a.created_at)}
                   </CardDescription>
                 </CardHeader>
               </Card>

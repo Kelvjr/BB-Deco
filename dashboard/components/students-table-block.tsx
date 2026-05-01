@@ -10,9 +10,15 @@ import {
 
 function filterByAdmission(
   students: StudentRow[],
-  mode: "all" | "enrolled" | "apprenticeship",
+  mode: "all" | "enrolled" | "apprenticeship" | "alumni",
 ): StudentRow[] {
   if (mode === "all") return students;
+  if (mode === "alumni") {
+    return students.filter((s) => {
+      const status = (s.status ?? "active").toLowerCase();
+      return status === "completed" || status === "graduated";
+    });
+  }
   return students.filter((s) => {
     const t = (s.admission_type ?? "enrolled").toLowerCase();
     if (mode === "apprenticeship") return t === "apprenticeship";
@@ -30,7 +36,7 @@ export async function StudentsTableBlock({
   title: string;
   description: string;
   /** Subset: enrolled = non-apprenticeship stream, apprenticeship = government stream. */
-  admissionMode?: "all" | "enrolled" | "apprenticeship";
+  admissionMode?: "all" | "enrolled" | "apprenticeship" | "alumni";
   emptyActionHref?: string;
   emptyActionLabel?: string;
 }) {

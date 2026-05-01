@@ -10,6 +10,16 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 
+const CURRICULUM_PLACEHOLDER = `[
+  {
+    "module": "Foundation Skills",
+    "duration": "4 weeks",
+    "lessons": ["Kitchen safety", "Tools and equipment"],
+    "practical_sessions": ["Knife skills lab"],
+    "requirements": ["Apron", "Notebook"]
+  }
+]`;
+
 export function ProgramForm({
   mode,
   programId,
@@ -146,7 +156,11 @@ export function ProgramForm({
               onChange={(e) => setCurriculumJson(e.target.value)}
               rows={8}
               className="font-mono text-xs"
+              placeholder={CURRICULUM_PLACEHOLDER}
             />
+            <p className="text-xs text-slate-500">
+              Build modules with lessons, duration, practical sessions, and requirements.
+            </p>
           </div>
           {err ? <p className="text-sm text-red-600">{err}</p> : null}
           <Button type="submit" disabled={loading}>

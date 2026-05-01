@@ -3,30 +3,14 @@
 import Link from "next/link";
 import { StatusBadge } from "@/components/ui/status-badge";
 import type { ApplicationTableRowView } from "@/components/applications-table-body";
+import { formatDashboardDateOnly } from "@/lib/date-format";
 
 function dateApplied(row: ApplicationTableRowView): string {
   const iso = row.submittedAtIso?.trim();
-  if (iso) {
-    const d = new Date(iso);
-    if (!Number.isNaN(d.getTime())) {
-      return d.toLocaleDateString(undefined, {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-      });
-    }
-  }
+  if (iso) return formatDashboardDateOnly(iso);
   const fallback = row.submittedAt?.trim();
   if (!fallback || fallback === "—") return "—";
-  const d = new Date(fallback);
-  if (!Number.isNaN(d.getTime())) {
-    return d.toLocaleDateString(undefined, {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
-  }
-  return fallback;
+  return formatDashboardDateOnly(fallback);
 }
 
 export function RecentApplicationsTable({

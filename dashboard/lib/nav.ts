@@ -73,6 +73,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: "All Students", href: "/students/all" },
       { label: "Enrolled Students", href: "/students/enrolled" },
       { label: "Apprenticeship Students", href: "/students/apprenticeships" },
+      { label: "Alumni Students", href: "/students/alumni" },
       { label: "Add Student", href: "/students/add", icon: UserPlus },
     ],
   },
@@ -188,6 +189,7 @@ export function titleForPath(pathname: string): string {
   if (
     pathname.startsWith("/students/") &&
     !pathname.match(/^\/students\/(all|enrolled|apprenticeships|add)$/)
+    && !pathname.match(/^\/students\/(alumni)$/)
   ) {
     return "Student profile";
   }

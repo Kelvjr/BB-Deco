@@ -33,7 +33,7 @@ export function HeroWelcome({
         aria-hidden
       />
 
-      <div className="relative grid gap-6 md:grid-cols-[1.4fr_1fr] md:gap-8">
+      <div className="relative grid gap-6 lg:grid-cols-[minmax(0,1fr)_260px] lg:gap-8 xl:grid-cols-[minmax(0,1fr)_300px]">
         <div>
           <p className="text-sm font-medium text-white/80">{greeting},</p>
           <h1 className="mt-1 text-3xl font-semibold tracking-tight md:text-4xl">
@@ -43,11 +43,11 @@ export function HeroWelcome({
             Here&rsquo;s what&rsquo;s happening with your school today. Stay on
             top of admissions, students, and announcements.
           </p>
-          <div className="mt-6 flex flex-wrap gap-2">
+          <div className="mt-6 grid gap-2 sm:grid-cols-3">
             <Button
               asChild
               variant="secondary"
-              className="h-9 bg-white px-4 text-[13px] font-semibold text-slate-900 hover:bg-slate-50"
+              className="h-9 bg-white px-3 text-[13px] font-semibold text-slate-900 hover:bg-slate-50"
             >
               <Link href="/students/add">
                 <UserPlus className="size-4" strokeWidth={2} />
@@ -57,7 +57,7 @@ export function HeroWelcome({
             <Button
               asChild
               variant="ghost"
-              className="h-9 border border-white/30 bg-white/10 px-4 text-[13px] font-semibold text-white backdrop-blur hover:bg-white/20 hover:text-white"
+              className="h-9 border border-white/30 bg-white/10 px-3 text-[13px] font-semibold text-white backdrop-blur hover:bg-white/20 hover:text-white"
             >
               <Link href="/admissions/pending">
                 <ClipboardList className="size-4" strokeWidth={2} />
@@ -67,7 +67,7 @@ export function HeroWelcome({
             <Button
               asChild
               variant="ghost"
-              className="h-9 border border-white/30 bg-white/10 px-4 text-[13px] font-semibold text-white backdrop-blur hover:bg-white/20 hover:text-white"
+              className="h-9 border border-white/30 bg-white/10 px-3 text-[13px] font-semibold text-white backdrop-blur hover:bg-white/20 hover:text-white"
             >
               <Link href="/communications/announcements">
                 <Megaphone className="size-4" strokeWidth={2} />

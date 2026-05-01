@@ -5,7 +5,6 @@ import {
   ArrowUpRight,
   ClipboardList,
   Megaphone,
-  Plus,
   UserPlus,
   type LucideIcon,
 } from "lucide-react";
@@ -49,24 +48,17 @@ const ACTIONS: Action[] = [
     icon: Megaphone,
     accent: "bg-blue-50 text-blue-700",
   },
-  {
-    label: "Create program",
-    description: "Add a course or track",
-    href: "/programs/add",
-    icon: Plus,
-    accent: "bg-fuchsia-50 text-fuchsia-700",
-  },
 ];
 
 export function QuickActionsGrid() {
   return (
-    <Card className="h-full">
-      <CardHeader>
+    <Card>
+      <CardHeader className="pb-3">
         <CardTitle>Quick actions</CardTitle>
         <CardDescription>Jump into common workflows</CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="grid gap-2">
+        <div className="grid gap-2 lg:grid-cols-3">
           {ACTIONS.map((a) => (
             <Link
               key={a.href}

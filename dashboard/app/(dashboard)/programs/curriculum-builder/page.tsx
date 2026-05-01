@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { BookOpen, Clock, FlaskConical, ListChecks } from "lucide-react";
 import { fetchProgramsCached } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import {
@@ -17,7 +18,7 @@ export default async function CurriculumBuilderPage() {
   const programs = res.ok ? res.data : [];
 
   return (
-    <WorkspaceShell subtitle="Attach modules to each program. Editing uses the program form’s curriculum JSON for now.">
+    <WorkspaceShell subtitle="Build program modules, lessons, duration, practical sessions, and requirements.">
       <div className="space-y-4">
         <Button asChild variant="outline">
           <Link href="/programs/add">Create program</Link>
@@ -30,19 +31,37 @@ export default async function CurriculumBuilderPage() {
             </CardContent>
           </Card>
         ) : (
-          <ul className="space-y-3">
+          <ul className="grid gap-4 lg:grid-cols-2">
             {programs.map((p) => (
               <li key={String(p.id)}>
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between gap-2">
+                <Card className="h-full">
+                  <CardHeader className="flex flex-row items-start justify-between gap-2">
                     <div>
                       <CardTitle className="text-base">{p.name}</CardTitle>
-                      <CardDescription>Edit curriculum JSON on the program.</CardDescription>
+                      <CardDescription>{p.duration || "Duration not set"}</CardDescription>
                     </div>
                     <Button asChild size="sm">
-                      <Link href={`/programs/${p.id}/edit`}>Edit modules</Link>
+                      <Link href={`/programs/${p.id}/edit`}>Build curriculum</Link>
                     </Button>
                   </CardHeader>
+                  <CardContent className="grid gap-3 text-sm sm:grid-cols-2">
+                    <div className="rounded-lg bg-slate-50 p-3">
+                      <BookOpen className="mb-2 size-4 text-[var(--bb-primary)]" />
+                      Modules and lessons
+                    </div>
+                    <div className="rounded-lg bg-slate-50 p-3">
+                      <Clock className="mb-2 size-4 text-[var(--bb-primary)]" />
+                      Duration planning
+                    </div>
+                    <div className="rounded-lg bg-slate-50 p-3">
+                      <FlaskConical className="mb-2 size-4 text-[var(--bb-primary)]" />
+                      Practical sessions
+                    </div>
+                    <div className="rounded-lg bg-slate-50 p-3">
+                      <ListChecks className="mb-2 size-4 text-[var(--bb-primary)]" />
+                      Entry requirements
+                    </div>
+                  </CardContent>
                 </Card>
               </li>
             ))}

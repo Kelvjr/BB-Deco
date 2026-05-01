@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { StudentProfileView } from "@/components/student-profile-view";
-import { fetchStudentByIdCached } from "@/lib/api";
+import { fetchApplicationByIdCached, fetchStudentByIdCached } from "@/lib/api";
 
 export const dynamic = "force-dynamic";
 
@@ -26,5 +26,18 @@ export default async function StudentDetailPage({
     );
   }
   if (!result.data || result.data.id == null) notFound();
-  return <StudentProfileView row={result.data} />;
+  const applicationId =
+    typeof result.data.application_id === "string" &&
+    result.data.application_id.trim()
+      ? result.data.application_id.trim()
+      : null;
+  const applicationResult = applicationId
+    ? await fetchApplicationByIdCached(applicationId)
+    : null;
+  return (
+    <StudentProfileView
+      row={result.data}
+      application={applicationResult?.ok ? applicationResult.data : null}
+    />
+  );
 }

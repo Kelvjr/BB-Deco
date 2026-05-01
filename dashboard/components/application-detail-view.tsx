@@ -27,6 +27,7 @@ import {
   type ApplicationRow,
   type StudentRow,
 } from "@/lib/api";
+import { formatDashboardDate, formatDashboardDateOnly } from "@/lib/date-format";
 import { Calendar, User } from "lucide-react";
 
 function display(value: unknown, empty = "—"): string {
@@ -169,7 +170,7 @@ export function ApplicationDetailView({
                 <p className="mt-1 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-sm text-slate-600 sm:justify-start">
                   <span className="inline-flex items-center gap-1.5">
                     <Calendar className="size-3.5 text-slate-400" strokeWidth={1.75} />
-                    Submitted {display(row.created_at)}
+                    Submitted {formatDashboardDate(row.created_at)}
                   </span>
                   <span className="text-slate-300">·</span>
                   <span className="font-mono text-xs text-slate-500">ID {applicationId}</span>
@@ -206,7 +207,10 @@ export function ApplicationDetailView({
                   {fieldTable([
                     { label: "Full name", value: display(row.full_name) },
                     { label: "Gender", value: display(row.gender) },
-                    { label: "Date of birth", value: display(row.date_of_birth) },
+                    {
+                      label: "Date of birth",
+                      value: formatDashboardDateOnly(row.date_of_birth),
+                    },
                   ])}
                 </CardContent>
               </Card>
@@ -274,7 +278,7 @@ export function ApplicationDetailView({
                 <CardContent>
                   {fieldTable([
                     { label: "Status", value: statusLabel },
-                    { label: "Submitted", value: display(row.created_at) },
+                    { label: "Submitted", value: formatDashboardDate(row.created_at) },
                   ])}
                   <p className="mt-3 text-xs text-slate-500">
                     A full status history will appear when audit logging is enabled.
