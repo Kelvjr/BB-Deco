@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { ApplicationDetailView } from "@/components/application-detail-view";
 import {
   fetchApplicationByIdCached,
+  fetchStudentsCached,
 } from "@/lib/api";
 
 export const dynamic = "force-dynamic";
@@ -36,5 +37,19 @@ export default async function ApplicationDetailPage({
   const applicationIdStr = String(row.id ?? id ?? "").trim();
   if (!applicationIdStr) notFound();
 
-  return <ApplicationDetailView row={row} applicationId={applicationIdStr} />;
+  const studentsResult = await fetchStudentsCached();
+  const linkedStudent =
+    studentsResult.ok
+      ? studentsResult.data.find(
+          (student) => String(student.application_id ?? "") === applicationIdStr,
+        ) ?? null
+      : null;
+
+  return (
+    <ApplicationDetailView
+      row={row}
+      applicationId={applicationIdStr}
+      linkedStudent={linkedStudent}
+    />
+  );
 }

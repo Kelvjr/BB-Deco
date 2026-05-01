@@ -1,8 +1,11 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { ApplicationDecisionPanel } from "@/components/application-decision-panel";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -22,6 +25,7 @@ import {
   formatStatusLabel,
   normalizeApplicationStatus,
   type ApplicationRow,
+  type StudentRow,
 } from "@/lib/api";
 import { Calendar, User } from "lucide-react";
 
@@ -60,10 +64,16 @@ function statusBadgeVariant(
 export function ApplicationDetailView({
   row,
   applicationId,
+  linkedStudent,
 }: {
   row: ApplicationRow;
   applicationId: string;
+  linkedStudent: StudentRow | null;
 }) {
+  const router = useRouter();
+  const [studentCreated, setStudentCreated] = useState(Boolean(linkedStudent));
+  const [creatingStudent, setCreatingStudent] = useState(false);
+  const [studentMessage, setStudentMessage] = useState("");
   const statusKey = normalizeApplicationStatus(row.status);
   const statusLabel = formatStatusLabel(row.status);
   const name = display(row.full_name, "Applicant");
@@ -78,6 +88,41 @@ export function ApplicationDetailView({
     typeof row.identity_photo === "string" && row.identity_photo.startsWith("data:")
       ? row.identity_photo
       : null;
+
+  async function createStudentRecord() {
+    setCreatingStudent(true);
+    setStudentMessage("");
+    try {
+      const res = await fetch("/api/students", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          application_id: applicationId,
+          full_name: row.full_name ?? null,
+          email: row.email ?? null,
+          phone: row.phone ?? null,
+          program_applied: row.program_applied ?? null,
+          admission_type: "enrolled",
+          profile_image: photo,
+        }),
+      });
+      const text = await res.text();
+      const data = text ? JSON.parse(text) : {};
+      if (!res.ok) {
+        setStudentMessage(
+          data.details || data.error || `Could not create student (${res.status}).`,
+        );
+        return;
+      }
+      setStudentCreated(true);
+      setStudentMessage("Student record created");
+      router.refresh();
+    } catch {
+      setStudentMessage("Could not create student record.");
+    } finally {
+      setCreatingStudent(false);
+    }
+  }
 
   return (
     <div className="mx-auto max-w-5xl space-y-6 px-4 pb-12 pt-6 md:px-8">
@@ -255,6 +300,41 @@ export function ApplicationDetailView({
               />
             </CardContent>
           </Card>
+
+          {statusKey === "approved" ? (
+            <Card className="border-[rgba(8,151,53,0.2)] bg-white shadow-sm">
+              <CardHeader>
+                <CardTitle className="text-base">Student record</CardTitle>
+                <CardDescription>
+                  Approved applications should have a matching student profile.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {studentCreated ? (
+                  <div className="rounded-[var(--radius-sm)] border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-900">
+                    Student record created
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    <Button
+                      type="button"
+                      className="w-full"
+                      disabled={creatingStudent}
+                      onClick={createStudentRecord}
+                    >
+                      {creatingStudent ? "Creating student…" : "Create Student"}
+                    </Button>
+                    <p className="text-xs leading-relaxed text-slate-500">
+                      This creates a student profile from the approved application.
+                    </p>
+                  </div>
+                )}
+                {studentMessage ? (
+                  <p className="mt-3 text-xs text-slate-600">{studentMessage}</p>
+                ) : null}
+              </CardContent>
+            </Card>
+          ) : null}
 
           {photo ? (
             <Card>
