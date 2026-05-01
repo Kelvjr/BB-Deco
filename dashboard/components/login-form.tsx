@@ -42,14 +42,17 @@ export function LoginForm() {
         return;
       }
 
-      if (signIn.status === "needs_client_trust") {
-        const emailCodeFactor = signIn.supportedSecondFactors.find(
+      if (
+        signIn.status === "needs_client_trust" ||
+        signIn.status === "needs_second_factor"
+      ) {
+        const emailCodeFactor = signIn.supportedSecondFactors?.find(
           (factor) => factor.strategy === "email_code",
         );
 
         if (!emailCodeFactor) {
           setFormError(
-            "This device requires additional verification, but email code verification is not available.",
+            "This sign-in requires an additional verification method that this dashboard does not support yet.",
           );
           return;
         }
