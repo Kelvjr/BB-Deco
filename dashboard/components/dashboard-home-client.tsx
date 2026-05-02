@@ -261,16 +261,17 @@ export function DashboardHomeClient({
         />
       </section>
 
-      <section className="grid gap-4 lg:grid-cols-12">
-        <div className="lg:col-span-8">
+      <section>
+        <QuickActionsGrid />
+      </section>
+
+      <section>
+        <div>
           <ApplicationsBarChart
             data={triple}
             period={chartPeriod}
             onPeriodChange={setChartPeriod}
           />
-        </div>
-        <div className="lg:col-span-4">
-          <QuickActionsGrid />
         </div>
       </section>
 
