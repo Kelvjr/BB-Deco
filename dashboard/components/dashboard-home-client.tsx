@@ -14,14 +14,12 @@ import type {
   ProgramRow,
   StudentRow,
 } from "@/lib/api";
-import { applicationTableRows } from "@/lib/api";
 import {
   type ChartPeriod,
   type DateRangePeriod,
   applicationsTripleSeries,
   kpiMetrics,
   programBreakdown,
-  recentApplications,
   recentActivity,
   sparklineSeries,
   trendPct,
@@ -29,11 +27,11 @@ import {
 import { cn } from "@/lib/utils";
 
 import { ApplicationsBarChart } from "@/components/home/applications-bar-chart";
+import { ApplicationsTablePremium } from "@/components/home/applications-table-premium";
 import { HeroWelcome } from "@/components/home/hero-welcome";
 import { KpiCard } from "@/components/home/kpi-card";
 import { ProgramBreakdownDonut } from "@/components/home/program-breakdown-donut";
 import { QuickActionsGrid } from "@/components/home/quick-actions-grid";
-import { RecentApplicationsTable } from "@/components/recent-applications-table";
 import { StudentStreamDonut } from "@/components/home/student-stream-donut";
 import { TodayActivity } from "@/components/home/today-activity";
 
@@ -143,6 +141,14 @@ export function DashboardHomeClient({
     [programsCatalog],
   );
 
+  const programTableOptions = useMemo(
+    () =>
+      programsCatalog
+        .map((p) => (typeof p.name === "string" ? p.name.trim() : ""))
+        .filter(Boolean),
+    [programsCatalog],
+  );
+
   const programBreakdownDescription = useMemo(() => {
     if (programsCatalog.length === 0) return undefined;
     const n = activeProgramsCount;
@@ -150,11 +156,6 @@ export function DashboardHomeClient({
   }, [programsCatalog.length, activeProgramsCount]);
 
   const activity = useMemo(() => recentActivity(applications, 6), [applications]);
-
-  const recentRows = useMemo(() => {
-    const recent = recentApplications(applications, kpiPeriod, 5);
-    return applicationTableRows(recent);
-  }, [applications, kpiPeriod]);
 
   const sparkApps = useMemo(
     () => sparklineSeries(applications, 14),
@@ -292,17 +293,10 @@ export function DashboardHomeClient({
       </section>
 
       <section>
-        <div className="rounded-[var(--radius)] border border-[var(--border)] bg-[var(--card)] p-5 shadow-[var(--card-shadow)]">
-          <div className="mb-4">
-            <h2 className="text-lg font-semibold tracking-tight text-[var(--foreground)]">
-              Recent applications
-            </h2>
-            <p className="mt-1 text-sm text-[var(--muted-foreground)]">
-              Latest applications for the selected performance range.
-            </p>
-          </div>
-          <RecentApplicationsTable rows={recentRows} />
-        </div>
+        <ApplicationsTablePremium
+          rows={applications}
+          programOptionsFromCatalog={programTableOptions}
+        />
       </section>
     </div>
   );
