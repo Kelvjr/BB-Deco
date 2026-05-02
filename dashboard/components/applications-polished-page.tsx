@@ -148,24 +148,24 @@ function MetricCard({
   trendTone?: "positive" | "negative" | "neutral";
 }) {
   return (
-    <div className="rounded-2xl bg-white p-6 shadow-[0_2px_10px_rgba(15,23,42,0.08)] ring-1 ring-slate-200/70">
+    <div className="min-h-[152px] rounded-[18px] bg-white p-6 shadow-[0_4px_14px_rgba(15,23,42,0.08)] ring-1 ring-slate-200/60">
       <div className="flex items-start justify-between gap-4">
-        <p className="text-sm font-semibold text-slate-400">{label}</p>
+        <p className="text-[15px] font-bold text-[#93a3bb]">{label}</p>
         <div
           className={cn(
-            "flex size-11 items-center justify-center rounded-xl",
+            "flex size-12 items-center justify-center rounded-[14px]",
             iconClassName,
           )}
         >
           {icon}
         </div>
       </div>
-      <div className="mt-7 text-4xl font-bold tracking-normal text-slate-950">
+      <div className="mt-5 text-[34px] leading-none font-extrabold tracking-normal text-[#111827]">
         {value}
       </div>
       <div
         className={cn(
-          "mt-2 flex items-center gap-2 text-sm font-semibold",
+          "mt-3 flex items-center gap-2 text-sm font-bold",
           trendTone === "positive" && "text-emerald-600",
           trendTone === "negative" && "text-red-500",
           trendTone === "neutral" && "text-slate-400",
@@ -200,15 +200,15 @@ function FilterSelect({
   return (
     <label
       className={cn(
-        "relative flex h-[52px] min-w-[150px] items-center rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-950 shadow-sm",
+        "relative flex h-11 min-w-[150px] items-center rounded-xl border border-slate-200 bg-white px-4 text-sm font-bold text-[#111827] shadow-[0_1px_4px_rgba(15,23,42,0.04)]",
         className,
       )}
     >
-      <span className="mr-2 shrink-0 text-slate-400">{label}:</span>
+      <span className="mr-2 shrink-0 font-bold text-[#93a3bb]">{label}:</span>
       <select
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className="min-w-0 flex-1 appearance-none bg-transparent pr-6 font-semibold outline-none"
+        className="min-w-0 flex-1 appearance-none bg-transparent pr-6 font-bold outline-none"
       >
         {options.map((option) => (
           <option key={option.value} value={option.value}>
@@ -233,7 +233,7 @@ function ApplicantAvatar({ name }: { name: string }) {
   return (
     <div
       className={cn(
-        "flex size-11 shrink-0 items-center justify-center rounded-full text-sm font-bold ring-2 ring-white",
+        "flex size-11 shrink-0 items-center justify-center rounded-full text-sm font-extrabold ring-2 ring-white",
         colors[index],
       )}
     >
@@ -337,14 +337,14 @@ export function ApplicationsPolishedPage({
   }
 
   return (
-    <div className="min-h-full bg-[#eaf3f7] px-4 py-8 sm:px-6 lg:px-10">
-      <div className="mx-auto max-w-[1500px] space-y-8">
+    <div className="min-h-full bg-[#eaf4f8] px-4 py-10 sm:px-6 lg:px-9">
+      <div className="mx-auto max-w-[1520px] space-y-8">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <h1 className="text-4xl font-bold tracking-normal text-slate-950">
+            <h1 className="text-[34px] leading-tight font-extrabold tracking-normal text-[#111827]">
               Applications
             </h1>
-            <p className="mt-3 text-lg text-slate-400">
+            <p className="mt-3 text-[17px] font-medium text-[#93a3bb]">
               Manage and review incoming student applications.
             </p>
           </div>
@@ -352,7 +352,7 @@ export function ApplicationsPolishedPage({
             <DropdownMenuTrigger asChild>
               <Button
                 variant="outline"
-                className="h-12 w-fit rounded-xl border-slate-200 bg-white px-5 text-base font-semibold shadow-sm"
+                className="h-12 w-fit rounded-xl border-slate-200 bg-white px-5 text-base font-bold text-[#111827] shadow-[0_3px_10px_rgba(15,23,42,0.08)]"
               >
                 <Download className="size-5" />
                 Export
@@ -361,17 +361,17 @@ export function ApplicationsPolishedPage({
             </DropdownMenuTrigger>
             <DropdownMenuContent
               align="end"
-              className="w-64 rounded-2xl p-4 shadow-[0_18px_45px_rgba(15,23,42,0.16)]"
+              className="w-64 rounded-[18px] border-slate-100 p-4 shadow-[0_18px_45px_rgba(15,23,42,0.16)]"
             >
-              <DropdownMenuItem className="gap-4 rounded-xl px-3 py-4 text-base font-semibold">
+              <DropdownMenuItem className="gap-4 rounded-xl px-3 py-4 text-base font-bold">
                 <FileText className="size-5" />
                 Export as CSV
               </DropdownMenuItem>
-              <DropdownMenuItem className="gap-4 rounded-xl px-3 py-4 text-base font-semibold">
+              <DropdownMenuItem className="gap-4 rounded-xl px-3 py-4 text-base font-bold">
                 <Table2 className="size-5" />
                 Export as Excel
               </DropdownMenuItem>
-              <DropdownMenuItem className="gap-4 rounded-xl px-3 py-4 text-base font-semibold">
+              <DropdownMenuItem className="gap-4 rounded-xl px-3 py-4 text-base font-bold">
                 <FileType2 className="size-5" />
                 Export as PDF
               </DropdownMenuItem>
@@ -419,26 +419,28 @@ export function ApplicationsPolishedPage({
           />
         </div>
 
-        <div className="overflow-hidden rounded-2xl bg-white shadow-[0_2px_10px_rgba(15,23,42,0.08)] ring-1 ring-slate-200/70">
-          <div className="flex flex-col gap-4 border-b border-slate-100 p-5 xl:flex-row xl:items-center xl:justify-between">
-            <div className="flex min-w-0 flex-1 flex-col gap-4">
-              <div className="relative max-w-md">
-                <Search className="absolute top-1/2 left-4 size-5 -translate-y-1/2 text-slate-400" />
+        <div className="overflow-hidden rounded-[18px] bg-white shadow-[0_4px_14px_rgba(15,23,42,0.08)] ring-1 ring-slate-200/60">
+          <div className="border-b border-slate-100 p-6">
+            <div className="flex flex-col gap-4 2xl:flex-row 2xl:items-center 2xl:justify-between">
+              <div className="relative w-full max-w-[450px]">
+                <Search className="absolute top-1/2 left-5 size-5 -translate-y-1/2 text-[#93a3bb]" />
                 <input
                   value={query}
                   onChange={(event) =>
                     setFilter(() => setQuery(event.target.value))
                   }
                   placeholder="Search applicants..."
-                  className="h-[52px] w-full rounded-xl border-0 bg-[#eaf3f7] pr-4 pl-12 text-base font-medium text-slate-700 outline-none placeholder:text-slate-400"
+                  className="h-13 w-full rounded-xl border-0 bg-[#eaf4f8] pr-4 pl-13 text-base font-semibold text-[#334155] outline-none placeholder:text-[#93a3bb]"
                 />
               </div>
-              <div className="flex flex-wrap items-center gap-2">
-                <div className="flex h-9 items-center gap-2 rounded-full bg-slate-100 px-4 text-sm font-bold text-slate-500">
+
+              <div className="flex flex-wrap items-center gap-3">
+                <div className="flex h-11 items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-extrabold text-[#93a3bb] shadow-[0_1px_4px_rgba(15,23,42,0.04)]">
                   <SlidersHorizontal className="size-4" />
                   Filters
                 </div>
                 {[
+                  { value: "all", label: "All" },
                   { value: "pending", label: "Pending" },
                   { value: "approved", label: "Approved" },
                   { value: "rejected", label: "Rejected" },
@@ -448,10 +450,10 @@ export function ApplicationsPolishedPage({
                     type="button"
                     onClick={() => setFilter(() => setStatus(option.value))}
                     className={cn(
-                      "h-9 rounded-full px-4 text-sm font-bold transition",
+                      "h-11 rounded-xl px-4 text-sm font-extrabold transition",
                       status === option.value
-                        ? "bg-slate-950 text-white"
-                        : "bg-white text-slate-500 ring-1 ring-slate-200 hover:bg-slate-50",
+                        ? "bg-[#111827] text-white shadow-[0_8px_18px_rgba(17,24,39,0.18)]"
+                        : "bg-white text-[#64748b] ring-1 ring-slate-200 hover:bg-slate-50",
                     )}
                   >
                     {option.label}
@@ -460,71 +462,61 @@ export function ApplicationsPolishedPage({
               </div>
             </div>
 
-            <div className="grid gap-3 sm:grid-cols-2 xl:flex xl:flex-wrap xl:justify-end">
-              <FilterSelect
-                label="Status"
-                value={status}
-                options={[
-                  { value: "all", label: "All" },
-                  { value: "pending", label: "Pending" },
-                  { value: "approved", label: "Approved" },
-                  { value: "rejected", label: "Rejected" },
-                ]}
-                onChange={(value) => setFilter(() => setStatus(value))}
-              />
+            <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
               <FilterSelect
                 label="Program"
                 value={program}
                 options={filterOptions.programs}
                 onChange={(value) => setFilter(() => setProgram(value))}
-                className="min-w-[190px]"
+                className="min-w-0"
               />
               <FilterSelect
                 label="Date submitted"
                 value={dateSubmitted}
                 options={dateFilters}
                 onChange={(value) => setFilter(() => setDateSubmitted(value))}
-                className="min-w-[210px]"
+                className="min-w-0"
               />
               <FilterSelect
                 label="Intake"
                 value={intake}
                 options={filterOptions.intakes}
                 onChange={(value) => setFilter(() => setIntake(value))}
+                className="min-w-0"
               />
               <FilterSelect
                 label="Education level"
                 value={educationLevel}
                 options={filterOptions.educationLevels}
                 onChange={(value) => setFilter(() => setEducationLevel(value))}
-                className="min-w-[220px]"
+                className="min-w-0"
               />
             </div>
           </div>
 
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[1050px] border-collapse">
+            <table className="w-full min-w-[1120px] border-collapse">
               <thead>
                 <tr className="border-b border-slate-100">
-                  <th className="px-8 py-5 text-left text-xs font-bold tracking-widest text-slate-400 uppercase">
+                  <th className="px-8 py-5 text-left text-xs font-extrabold tracking-widest text-[#93a3bb] uppercase">
                     Applicant Details
                   </th>
-                  <th className="px-6 py-5 text-left text-xs font-bold tracking-widest text-slate-400 uppercase">
+                  <th className="px-6 py-5 text-left text-xs font-extrabold tracking-widest text-[#93a3bb] uppercase">
                     Program
                   </th>
-                  <th className="px-6 py-5 text-left text-xs font-bold tracking-widest text-slate-400 uppercase">
+                  <th className="px-6 py-5 text-left text-xs font-extrabold tracking-widest text-[#93a3bb] uppercase">
                     Date Applied
                   </th>
-                  <th className="px-6 py-5 text-left text-xs font-bold tracking-widest text-slate-400 uppercase">
+                  <th className="px-6 py-5 text-left text-xs font-extrabold tracking-widest text-[#93a3bb] uppercase">
                     Intake
                   </th>
-                  <th className="px-6 py-5 text-left text-xs font-bold tracking-widest text-slate-400 uppercase">
+                  <th className="px-6 py-5 text-left text-xs font-extrabold tracking-widest text-[#93a3bb] uppercase">
                     Education Level
                   </th>
-                  <th className="px-6 py-5 text-left text-xs font-bold tracking-widest text-slate-400 uppercase">
+                  <th className="px-6 py-5 text-left text-xs font-extrabold tracking-widest text-[#93a3bb] uppercase">
                     Status
                   </th>
-                  <th className="px-8 py-5 text-right text-xs font-bold tracking-widest text-slate-400 uppercase">
+                  <th className="px-8 py-5 text-right text-xs font-extrabold tracking-widest text-[#93a3bb] uppercase">
                     Actions
                   </th>
                 </tr>
@@ -539,48 +531,48 @@ export function ApplicationsPolishedPage({
                     const href = id ? `/applications/${id}` : undefined;
                     const rowContent = (
                       <>
-                        <td className="px-8 py-6">
+                        <td className="px-8 py-5">
                           <div className="flex items-center gap-4">
-                            <ApplicantAvatar name={`${name}-${index}`} />
+                            <ApplicantAvatar name={name} />
                             <div>
-                              <div className="font-bold text-slate-950">
+                              <div className="text-[15px] font-extrabold text-[#111827]">
                                 {name}
                               </div>
-                              <div className="mt-1 text-sm font-medium text-slate-400">
+                              <div className="mt-1 text-sm font-semibold text-[#93a3bb]">
                                 {email}
                               </div>
                             </div>
                           </div>
                         </td>
-                        <td className="px-6 py-6 font-bold text-slate-950">
+                        <td className="px-6 py-5 text-[15px] font-extrabold text-[#111827]">
                           {compact(row.program_applied) || "-"}
                         </td>
-                        <td className="px-6 py-6 font-medium text-slate-400">
+                        <td className="px-6 py-5 text-[15px] font-semibold text-[#93a3bb]">
                           {formatDashboardDateOnly(submittedDate(row))}
                         </td>
-                        <td className="px-6 py-6 font-medium text-slate-500">
+                        <td className="px-6 py-5 text-[15px] font-semibold text-[#64748b]">
                           {intakeValue(row) || "-"}
                         </td>
-                        <td className="px-6 py-6 font-medium text-slate-500">
+                        <td className="px-6 py-5 text-[15px] font-semibold text-[#64748b]">
                           {compact(row.education_level) || "-"}
                         </td>
-                        <td className="px-6 py-6">
+                        <td className="px-6 py-5">
                           <span
                             className={cn(
-                              "inline-flex rounded-full px-4 py-2 text-sm font-bold",
+                              "inline-flex rounded-full px-4 py-2 text-sm font-extrabold",
                               statusBadgeClass(statusKey),
                             )}
                           >
                             {formatStatusLabel(row.status)}
                           </span>
                         </td>
-                        <td className="px-8 py-6 text-right">
+                        <td className="px-8 py-5 text-right">
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <Button
                                 variant="ghost"
                                 size="icon"
-                                className="rounded-full text-slate-400"
+                                className="rounded-full text-[#93a3bb] hover:bg-slate-100"
                                 aria-label={`Actions for ${name}`}
                               >
                                 <MoreVertical className="size-5" />
@@ -608,7 +600,7 @@ export function ApplicationsPolishedPage({
                     return href ? (
                       <tr
                         key={id}
-                        className="border-b border-slate-100 transition hover:bg-slate-50/70"
+                        className="border-b border-slate-100 transition hover:bg-[#f8fafc]"
                       >
                         {rowContent}
                       </tr>
@@ -624,13 +616,13 @@ export function ApplicationsPolishedPage({
                 ) : (
                   <tr>
                     <td colSpan={7} className="px-6 py-20 text-center">
-                      <div className="mx-auto flex size-14 items-center justify-center rounded-full bg-slate-100 text-slate-400">
+                      <div className="mx-auto flex size-14 items-center justify-center rounded-full bg-[#eaf4f8] text-[#93a3bb]">
                         <GraduationCap className="size-7" />
                       </div>
-                      <h2 className="mt-5 text-xl font-bold text-slate-950">
+                      <h2 className="mt-5 text-xl font-extrabold text-[#111827]">
                         No applications found
                       </h2>
-                      <p className="mt-2 text-sm font-medium text-slate-400">
+                      <p className="mt-2 text-sm font-semibold text-[#93a3bb]">
                         Adjust the filters or wait for new applications from the
                         public apply form.
                       </p>
@@ -642,11 +634,11 @@ export function ApplicationsPolishedPage({
           </div>
 
           <div className="flex flex-col gap-4 px-8 py-6 sm:flex-row sm:items-center sm:justify-between">
-            <div className="text-sm font-semibold text-slate-400">
+            <div className="text-sm font-bold text-[#93a3bb]">
               Showing{" "}
-              <span className="font-bold text-slate-950">{showingFrom}</span> to{" "}
-              <span className="font-bold text-slate-950">{showingTo}</span> of{" "}
-              <span className="font-bold text-slate-950">
+              <span className="font-extrabold text-[#111827]">{showingFrom}</span> to{" "}
+              <span className="font-extrabold text-[#111827]">{showingTo}</span> of{" "}
+              <span className="font-extrabold text-[#111827]">
                 {filtered.length}
               </span>{" "}
               results
@@ -655,7 +647,7 @@ export function ApplicationsPolishedPage({
               <Button
                 variant="outline"
                 size="icon"
-                className="rounded-xl"
+                className="rounded-xl border-slate-200 bg-white shadow-sm"
                 disabled={safePage === 1}
                 onClick={() => setPage((value) => Math.max(1, value - 1))}
                 aria-label="Previous page"
@@ -670,10 +662,10 @@ export function ApplicationsPolishedPage({
                     type="button"
                     onClick={() => setPage(number)}
                     className={cn(
-                      "size-11 rounded-xl text-sm font-bold transition",
+                      "size-11 rounded-xl text-sm font-extrabold transition",
                       safePage === number
-                        ? "bg-[#eaf3f7] text-slate-950"
-                        : "text-slate-400 hover:bg-slate-50",
+                        ? "bg-[#eaf4f8] text-[#111827]"
+                        : "text-[#93a3bb] hover:bg-slate-50",
                     )}
                   >
                     {number}
@@ -682,15 +674,15 @@ export function ApplicationsPolishedPage({
               })}
               {pageCount > 4 ? (
                 <>
-                  <span className="px-2 font-bold text-slate-400">...</span>
+                  <span className="px-2 font-extrabold text-[#93a3bb]">...</span>
                   <button
                     type="button"
                     onClick={() => setPage(pageCount)}
                     className={cn(
-                      "size-11 rounded-xl text-sm font-bold transition",
+                      "size-11 rounded-xl text-sm font-extrabold transition",
                       safePage === pageCount
-                        ? "bg-[#eaf3f7] text-slate-950"
-                        : "text-slate-400 hover:bg-slate-50",
+                        ? "bg-[#eaf4f8] text-[#111827]"
+                        : "text-[#93a3bb] hover:bg-slate-50",
                     )}
                   >
                     {pageCount}
@@ -700,7 +692,7 @@ export function ApplicationsPolishedPage({
               <Button
                 variant="outline"
                 size="icon"
-                className="rounded-xl"
+                className="rounded-xl border-slate-200 bg-white shadow-sm"
                 disabled={safePage === pageCount}
                 onClick={() =>
                   setPage((value) => Math.min(pageCount, value + 1))
